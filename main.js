@@ -92,8 +92,9 @@ function debugCellType(grid){
         stroke(255,0,0);
         point(i,j);
       } else if (grid[i][j] === 'intersection'){
+        console.log(grid[i][j]);
         strokeWeight(1);
-        stroke(255,0,255);
+        stroke(0,255,0);
         point(i,j); 
       }
     }
@@ -192,12 +193,43 @@ function defineRoads(grid, intersections) {
     }
 }
 
+function drawDashedLines(startX, startY, endX, endY){
+  let dx = endX - startX;
+  let dy = endY - startY;
+  let roadLength = Math.sqrt(dx * dx + dy * dy);
+  let roadDirX = dx / roadLength;
+  let roadDirY = dy / roadLength;
+  let numOfSegments = Math.floor(roadLength / gridSize);
+  let gapFactor = 0.5;  // Adjust this to change gap length, value should be between 0 and 1
+  let dashLength = (1 - gapFactor) * gridSize;
+  let gapLength = gapFactor * gridSize / 2;  // Half of the gap on each side
+  let maxDisplacement = 1;
+  stroke(255,255,255);
+  strokeWeight(1);
+  for (let i = 0; i < numOfSegments; i++){
+    let currXStart = startX + (i * gridSize + gapLength) * roadDirX;
+    let currYStart = startY + (i * gridSize + gapLength) * roadDirY;
+    let currXEnd = currXStart + dashLength * roadDirX;
+    let currYEnd = currYStart + dashLength * roadDirY;
+    
+    dispX = random(-maxDisplacement, maxDisplacement);
+    dispY = random(-maxDisplacement, maxDisplacement);
+    currXEnd += dispX;
+    currYEnd += dispY;
+    
+    line(currXStart, currYStart, currXEnd, currYEnd);
+  }
+}
+
+
 function drawRoad(startX, startY, endX, endY, borderOffset = gridSize) {
     // Base road
     stroke(150,150,150);
     strokeWeight(2*gridSize);
     line(startX, startY, endX, endY);
-
+    drawDashedLines(startX, startY, endX, endY);  
+  
+  
     let maxDisplacement = 2; // Maximum displacement from the border line
     let borderDistance = gridSize; // Distance of the border from the road
     
@@ -309,6 +341,93 @@ function finalizeMap(grid, intersections){
         line(x + 2*gridSize, y, x + 2*gridSize, y + 2*gridSize);  // Draw border at the east
       }
       noStroke();  // Reset stroke
+      
+      // Draw crosswalks
+      if (numRoads > 2){
+        let numOfCrossWalkLines = 4; // For each half of the road
+        let crossWalkLength = 2 * gridSize;
+        let gapLength = Math.floor(2 * gridSize / (numOfCrossWalkLines + 1));
+        let maxDisplacement = 1; // in px
+        let ix = intersection.x;
+        let iy = intersection.y;
+        for (let dir of directions){
+          switch(dir) {
+            case 'north':
+              fill(150,150,150);
+              noStroke();
+              rect(x + Math.floor(gridSize/2),y-2*gridSize, gridSize, 2*gridSize);
+
+              stroke(255,255,255);
+              strokeWeight(1);
+              for (let i = 0; i < numOfCrossWalkLines; ++i){
+                  let randLength = random(1.7*gridSize-0.2,1.7*gridSize);
+                  let dispX = random(-maxDisplacement, maxDisplacement);
+                  let dispY = random(-maxDisplacement, maxDisplacement);
+                  let cwStartX = x + gapLength + i * gapLength;
+                  let cwStartY = y;
+                  let cwEndX = cwStartX + dispX;
+                  let cwEndY = cwStartY - randLength + dispY;
+                  line(cwStartX, cwStartY, cwEndX, cwEndY);
+              }
+              break;
+            case 'south':
+              fill(150,150,150);
+              noStroke();
+              rect(x + Math.floor(gridSize/2), y + 2*gridSize, gridSize, 2*gridSize);
+
+              stroke(255,255,255);
+              strokeWeight(1);
+              for (let i = 0; i < numOfCrossWalkLines; ++i){
+                  let randLength = random(1.7*gridSize-0.2,1.7*gridSize);
+                  let dispX = random(-maxDisplacement, maxDisplacement);
+                  let dispY = random(-maxDisplacement, maxDisplacement);
+                  let cwStartX = x + gapLength + i * gapLength;
+                  let cwStartY = y + 2*gridSize;
+                  let cwEndX = cwStartX + dispX;
+                  let cwEndY = cwStartY + randLength + dispY;
+                  line(cwStartX, cwStartY, cwEndX, cwEndY);
+              }
+              break;
+            case 'west':
+              fill(150,150,150);
+              noStroke();
+              rect(x - 2*gridSize, y + Math.floor(gridSize/2), 2*gridSize, gridSize);
+
+              stroke(255,255,255);
+              strokeWeight(1);
+              for (let i = 0; i < numOfCrossWalkLines; ++i){
+                  let randLength = random(1.7*gridSize-0.2,1.7*gridSize);
+                  let dispX = random(-maxDisplacement, maxDisplacement);
+                  let dispY = random(-maxDisplacement, maxDisplacement);
+                  let cwStartX = x;
+                  let cwStartY = y + gapLength + i * gapLength;
+                  let cwEndX = cwStartX - randLength + dispX;
+                  let cwEndY = cwStartY + dispY;
+                  line(cwStartX, cwStartY, cwEndX, cwEndY);
+              }
+              break;
+            case 'east':
+              fill(150,150,150);
+              noStroke();
+              rect(x + 2*gridSize, y + Math.floor(gridSize/2), 2*gridSize, gridSize);
+
+              stroke(255,255,255);
+              strokeWeight(1);
+              for (let i = 0; i < numOfCrossWalkLines; ++i){
+                  let randLength = random(1.7*gridSize-0.2,1.7*gridSize);
+                  let dispX = random(-maxDisplacement, maxDisplacement);
+                  let dispY = random(-maxDisplacement, maxDisplacement);
+                  let cwStartX = x + 2*gridSize;
+                  let cwStartY = y + gapLength + i * gapLength;
+                  let cwEndX = cwStartX + randLength + dispX;
+                  let cwEndY = cwStartY + dispY;
+                  line(cwStartX, cwStartY, cwEndX, cwEndY);
+              }
+              break;
+          }
+        }
+        noStroke(); // Reset stroke
+      }
       return true;  // keep this intersection
     } else {
       console.log("Removed intersection");
