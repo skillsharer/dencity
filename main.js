@@ -5,8 +5,54 @@ let gridSize = 10;
 let intersectBorder = gridSize*10;
 let mapBorder = gridSize*6
 let intersectionDensity = 0.3;
-let debug = true;
+let debug = false;
 
+function createBuilding(x, y, z, width, depth, height) {
+  let building = {
+    x: x,
+    y: y,
+    z: z,
+    width: width,
+    depth: depth,
+    height: height,
+  };
+  
+  building.windowSizeX = building.width / 15;
+  building.windowSizeY = building.height / 15;
+  
+  return building;
+}
+
+function drawBuilding(building) {
+  // Draw the building
+  fill(125);
+  box(building.width, building.height, building.depth);
+
+  // Draw the windows
+  fill(255);
+  for (let y = -building.height / 2 + building.windowSizeY; y < building.height / 2 - building.windowSizeY; y += building.windowSizeY * 2) {
+    for (let x = -building.width / 2 + building.windowSizeX; x < building.width / 2 - building.windowSizeX; x += building.windowSizeX * 2) {
+      // Draw windows on front and back
+      push();
+      translate(x, y, building.depth / 2 + 1);
+      rect(0, 0, building.windowSizeX, building.windowSizeY);
+      translate(0, 0, -building.depth - 2);
+      rect(0, 0, building.windowSizeX, building.windowSizeY);
+      pop();
+    }
+
+    for (let z = -building.depth / 2 + building.windowSizeY; z < building.depth / 2 - building.windowSizeY; z += building.windowSizeY * 2) {
+      // Draw windows on sides
+      push();
+      translate(building.width / 2 + 1, y, z);
+      rotateY(HALF_PI);
+      rect(0, 0, building.windowSizeX, building.windowSizeY);
+      translate(0, 0, -building.width - 2);
+      rect(0, 0, building.windowSizeX, building.windowSizeY);
+      pop();
+    }
+  }
+}
 
 class Cell {
     constructor(x, y) {
@@ -61,17 +107,7 @@ function getPixels(x0, y0, x1, y1, strokeWidth) {
 
 function setup() {
     pixelDensity(1); // ensures one unit in the canvas corresponds to one pixel
-    createCanvas(canvasWidth, canvasHeight);
-    background(200, 200, 200);
-    if (debug){
-      //blendMode(DIFFERENCE);
-      stroke(188,188,188)
-      strokeWeight(1);
-      for (let i = 0; i <= canvasWidth; i+=gridSize)
-        line(i,0,i,canvasHeight);
-        for (let j = 0; j <= canvasHeight; j+=gridSize)
-          line(0,j,canvasWidth,j);    
-    }
+    createCanvas(canvasWidth, canvasHeight, WEBGL);
 }
 
 function initMap(grid){
@@ -438,6 +474,18 @@ function finalizeMap(grid, intersections){
 }
 
 function draw() {
+  background(200, 200, 200);
+  translate(-canvasWidth / 2, -canvasHeight / 2, 0);  // move origin to top-left corner
+
+  if (debug){
+    //blendMode(DIFFERENCE);
+    stroke(188,188,188)
+    strokeWeight(1);
+    for (let i = 0; i <= canvasWidth; i+=gridSize)
+      line(i,0,i,canvasHeight);
+    for (let j = 0; j <= canvasHeight; j+=gridSize)
+      line(0,j,canvasWidth,j);    
+  }
   // Initialize grid
   let grid = new Array(canvasWidth);
   let intersections = [];
