@@ -210,6 +210,7 @@ function defineRoads(grid, intersections) {
                   }
                   roadPixels = getPixels(x+1,y,i-1,y, 2*gridSize);
                   intersection.addConnection(grid[i][y]);
+                  grid[i][y].addConnection(intersection);
                   setCellTypes(grid, roadPixels, 'road');
                   drawRoad(x,y,i,y);
                 }
@@ -244,6 +245,7 @@ function defineRoads(grid, intersections) {
                     }
                   roadPixels = getPixels(x,y+1,x,j-1, 2*gridSize);
                   intersection.addConnection(grid[x][j]);
+                  grid[x][j].addConnection(intersection);
                   setCellTypes(grid, roadPixels, 'road');
                   drawRoad(x,y,x,j);
                 }
@@ -533,11 +535,45 @@ function defineBorders(grid, borderWidth) {
     }
 }
 
+function calculateOffset(start, end, adjustment) {
+    if (start < end) {
+        return start + adjustment;
+    } else {
+        return start - adjustment;
+    }
+}
+
 function drawDashedLinesBetweenIntersections(intersections) {
+    const adjustment = 3 * gridSize;
     for (let intersection of intersections) {
         for (let connection of intersection.connectedIntersections) {
+            // Calculate start and end coordinates
+            let startX = intersection.x;
+            let startY = intersection.y;
+            let endX = connection.x;
+            let endY = connection.y;
+
+            // Check if the intersections are vertically aligned
+            if (startX === endX) {
+                if (intersection.connectedIntersections.length > 2) {
+                    startY = calculateOffset(startY, endY, adjustment);
+                }
+                if (connection.connectedIntersections.length > 2) {
+                    endY = calculateOffset(endY, startY, adjustment);
+                }
+            } 
+            // Check if the intersections are horizontally aligned
+            else {
+                if (intersection.connectedIntersections.length > 2) {
+                    startX = calculateOffset(startX, endX, adjustment);
+                }
+                if (connection.connectedIntersections.length > 2) {
+                    endX = calculateOffset(endX, startX, adjustment);
+                }
+            }
+
             // Draw dashed line from intersection to connection
-            drawDashedLines(intersection.x, intersection.y, connection.x, connection.y);
+            drawDashedLines(startX, startY, endX, endY);
         }
     }
 }
@@ -575,7 +611,6 @@ function drawDashedLines(startX, startY, endX, endY){
 function draw() {
   background(200, 200, 200);
   translate(-canvasWidth / 2, -canvasHeight / 2, 0);  // move origin to top-left corner
-
   if (debug){
     blendMode(DIFFERENCE);
     stroke(188,188,188)
