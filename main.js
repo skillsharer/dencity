@@ -4,6 +4,7 @@ let canvasHeight = canvasWidth*1.5;
 let gridSize = 10;
 let intersectBorder = gridSize*10;
 let mapBorder = gridSize*6
+let roadBorder = gridSize;
 let intersectionDensity = 0.3;
 let debug = false;
 
@@ -24,6 +25,7 @@ function createBuilding(x, y, z, width, depth, height) {
 }
 
 function drawBuilding(building) {
+  rotateX(HALF_PI);
   // Draw the building
   fill(125);
   box(building.width, building.height, building.depth);
@@ -62,6 +64,18 @@ class Cell {
     }
     setType(newType) {
         this.type = newType;
+    }
+}
+
+class Intersection extends Cell {
+    constructor(x, y) {
+        super(x, y);
+        this.type = 'intersection';
+        this.connectedIntersections = [];
+    }
+
+    addConnection(intersection) {
+        this.connectedIntersections.push(intersection);
     }
 }
 
@@ -108,6 +122,7 @@ function getPixels(x0, y0, x1, y1, strokeWidth) {
 function setup() {
     pixelDensity(1); // ensures one unit in the canvas corresponds to one pixel
     createCanvas(canvasWidth, canvasHeight, WEBGL);
+    noLoop();
 }
 
 function initMap(grid){
@@ -127,23 +142,30 @@ function debugCellType(grid){
         strokeWeight(1);
         stroke(255,0,0);
         point(i,j);
-      } else if (grid[i][j] === 'intersection'){
-        console.log(grid[i][j]);
+      } else if (grid[i][j].type === 'intersection'){
         strokeWeight(1);
         stroke(0,255,0);
         point(i,j); 
+      }else if (grid[i][j].type === 'border'){
+        strokeWeight(1);
+        stroke(10,170,255);
+        point(i,j);
+      }else{
+        continue;
       }
     }
   }
 }
+
 
 function populateIntersections(grid, intersections){
   for (let i = mapBorder; i < canvasWidth; i+=intersectBorder){
     for (let j = mapBorder; j < canvasHeight; j+=intersectBorder){
       if (j % gridSize === 0 && i % gridSize === 0){
         if (Math.random() < intersectionDensity) {
-          grid[i][j].type = 'intersection';
-          intersections.push(grid[i][j]);
+          let intersection = new Intersection(i, j);
+          intersections.push(intersection);
+          grid[i][j] = intersection; 
           if (debug){
              // Draw a point at this position
             stroke(0, 0, 0); // Color of the border (black)
@@ -181,13 +203,13 @@ function defineRoads(grid, intersections) {
                 if (validHorizontalRoad) {
                   if (debug) {
                     for (let roadX = x + 1; roadX < i; roadX++) {
-                      //grid[roadX][y].type = 'road';
                       stroke(118, 188, 196); // Road color
                       strokeWeight(1);
                       point(roadX, y);
                     }
                   }
                   roadPixels = getPixels(x+1,y,i-1,y, 2*gridSize);
+                  intersection.addConnection(grid[i][y]);
                   setCellTypes(grid, roadPixels, 'road');
                   drawRoad(x,y,i,y);
                 }
@@ -206,7 +228,7 @@ function defineRoads(grid, intersections) {
             if (grid[x][j].type === 'intersection' && validVerticalRoad) {
                 // Check if vertical road can be drawn
                 for (let roadY = y + 1; roadY < j; roadY++) {
-                    if (grid[x][roadY].type !== null) {
+                    if (grid[x][roadY].type === 'road') {
                         validVerticalRoad = false;
                         break;
                     }
@@ -221,6 +243,7 @@ function defineRoads(grid, intersections) {
                       }
                     }
                   roadPixels = getPixels(x,y+1,x,j-1, 2*gridSize);
+                  intersection.addConnection(grid[x][j]);
                   setCellTypes(grid, roadPixels, 'road');
                   drawRoad(x,y,x,j);
                 }
@@ -257,13 +280,11 @@ function drawDashedLines(startX, startY, endX, endY){
   }
 }
 
-
 function drawRoad(startX, startY, endX, endY, borderOffset = gridSize) {
     // Base road
     stroke(150,150,150);
     strokeWeight(2*gridSize);
     line(startX, startY, endX, endY);
-    drawDashedLines(startX, startY, endX, endY);  
   
   
     let maxDisplacement = 2; // Maximum displacement from the border line
@@ -473,12 +494,90 @@ function finalizeMap(grid, intersections){
   });
 }
 
+function defineBuildings(grid){
+  let buildings = [
+  createBuilding(200, 200, 0, 50, 70, 50),
+  createBuilding(300, 400, 0, 50, 70, 300),
+  createBuilding(300, 700, 0, 50, 70, 350)
+
+  ];
+  buildings.forEach((building) => {
+    push(); // Start a new drawing state
+    translate(building.x, building.y, building.z);
+    drawBuilding(building);
+    pop(); // Restore original state
+  });
+  
+}
+
+function defineBorders(grid, borderWidth) {
+    // Iterate over all cells in the grid
+    for (let i = 0; i < canvasWidth; i++) {
+        for (let j = 0; j < canvasHeight; j++) {
+            // If the current cell is a road
+            if (grid[i][j].type === 'road') {
+                // Check all neighboring cells within the border width
+                for (let dx = -borderWidth; dx <= borderWidth; dx++) {
+                    for (let dy = -borderWidth; dy <= borderWidth; dy++) {
+                        // Ensure the neighbor cell is within the grid boundaries
+                        if (i + dx >= 0 && i + dx < canvasWidth && j + dy >= 0 && j + dy < canvasHeight) {
+                            // If the neighboring cell isn't a road or an intersection, make it a border
+                            if (grid[i + dx][j + dy].type !== 'road' && grid[i + dx][j + dy].type !== 'intersection') {
+                                grid[i + dx][j + dy].setType('border');
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function drawDashedLinesBetweenIntersections(intersections) {
+    for (let intersection of intersections) {
+        for (let connection of intersection.connectedIntersections) {
+            // Draw dashed line from intersection to connection
+            drawDashedLines(intersection.x, intersection.y, connection.x, connection.y);
+        }
+    }
+}
+
+function drawDashedLines(startX, startY, endX, endY){
+  let dx = endX - startX;
+  let dy = endY - startY;
+  let roadLength = Math.sqrt(dx * dx + dy * dy);
+  let roadDirX = dx / roadLength;
+  let roadDirY = dy / roadLength;
+  let numOfSegments = Math.floor(roadLength / gridSize);
+  let gapFactor = 0.5;  // Adjust this to change gap length, value should be between 0 and 1
+  let dashLength = (1 - gapFactor) * gridSize;
+  let gapLength = gapFactor * gridSize / 2;  // Half of the gap on each side
+  let maxDisplacement = 1;
+  stroke(255,255,255);
+  strokeWeight(1);
+  for (let i = 0; i < numOfSegments; i++){
+    let currXStart = startX + (i * gridSize + gapLength) * roadDirX;
+    let currYStart = startY + (i * gridSize + gapLength) * roadDirY;
+    let currXEnd = currXStart + dashLength * roadDirX;
+    let currYEnd = currYStart + dashLength * roadDirY;
+    
+    dispX = random(-maxDisplacement, maxDisplacement);
+    dispY = random(-maxDisplacement, maxDisplacement);
+    currXEnd += dispX;
+    currYEnd += dispY;
+    
+    line(currXStart, currYStart, currXEnd, currYEnd);
+  }
+}
+
+
+
 function draw() {
   background(200, 200, 200);
   translate(-canvasWidth / 2, -canvasHeight / 2, 0);  // move origin to top-left corner
 
   if (debug){
-    //blendMode(DIFFERENCE);
+    blendMode(DIFFERENCE);
     stroke(188,188,188)
     strokeWeight(1);
     for (let i = 0; i <= canvasWidth; i+=gridSize)
@@ -492,7 +591,9 @@ function draw() {
   grid = initMap(grid);
   [grid, intersections] = populateIntersections(grid, intersections);
   defineRoads(grid, intersections);
+  defineBorders(grid, roadBorder);
+  drawDashedLinesBetweenIntersections(intersections);
   finalizeMap(grid, intersections);
-  //debugCellType(grid);
-  noLoop();
+  if (debug) debugCellType(grid);
+  //defineBuildings(grid);
 }
