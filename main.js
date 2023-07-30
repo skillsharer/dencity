@@ -8,53 +8,6 @@ let roadBorder = gridSize;
 let intersectionDensity = 0.3;
 let debug = false;
 
-function createBuilding(x, y, z, width, depth, height) {
-  let building = {
-    x: x,
-    y: y,
-    z: z,
-    width: width,
-    depth: depth,
-    height: height,
-  };
-  
-  building.windowSizeX = building.width / 15;
-  building.windowSizeY = building.height / 15;
-  
-  return building;
-}
-
-function drawBuilding(building) {
-  rotateX(HALF_PI);
-  // Draw the building
-  fill(125);
-  box(building.width, building.height, building.depth);
-
-  // Draw the windows
-  fill(255);
-  for (let y = -building.height / 2 + building.windowSizeY; y < building.height / 2 - building.windowSizeY; y += building.windowSizeY * 2) {
-    for (let x = -building.width / 2 + building.windowSizeX; x < building.width / 2 - building.windowSizeX; x += building.windowSizeX * 2) {
-      // Draw windows on front and back
-      push();
-      translate(x, y, building.depth / 2 + 1);
-      rect(0, 0, building.windowSizeX, building.windowSizeY);
-      translate(0, 0, -building.depth - 2);
-      rect(0, 0, building.windowSizeX, building.windowSizeY);
-      pop();
-    }
-
-    for (let z = -building.depth / 2 + building.windowSizeY; z < building.depth / 2 - building.windowSizeY; z += building.windowSizeY * 2) {
-      // Draw windows on sides
-      push();
-      translate(building.width / 2 + 1, y, z);
-      rotateY(HALF_PI);
-      rect(0, 0, building.windowSizeX, building.windowSizeY);
-      translate(0, 0, -building.width - 2);
-      rect(0, 0, building.windowSizeX, building.windowSizeY);
-      pop();
-    }
-  }
-}
 
 class Cell {
     constructor(x, y) {
@@ -149,6 +102,10 @@ function debugCellType(grid){
       }else if (grid[i][j].type === 'border'){
         strokeWeight(1);
         stroke(10,170,255);
+        point(i,j);
+      }else if (grid[i][j].type === 'building'){
+        strokeWeight(1);
+        stroke(128,255,0);
         point(i,j);
       }else{
         continue;
@@ -496,22 +453,6 @@ function finalizeMap(grid, intersections){
   });
 }
 
-function defineBuildings(grid){
-  let buildings = [
-  createBuilding(200, 200, 0, 50, 70, 50),
-  createBuilding(300, 400, 0, 50, 70, 300),
-  createBuilding(300, 700, 0, 50, 70, 350)
-
-  ];
-  buildings.forEach((building) => {
-    push(); // Start a new drawing state
-    translate(building.x, building.y, building.z);
-    drawBuilding(building);
-    pop(); // Restore original state
-  });
-  
-}
-
 function defineBorders(grid, borderWidth) {
     // Iterate over all cells in the grid
     for (let i = 0; i < canvasWidth; i++) {
@@ -606,7 +547,133 @@ function drawDashedLines(startX, startY, endX, endY){
   }
 }
 
+// BUILDINGS DEFINITIONS
+function drawBuilding(building) {
+  rotateX(HALF_PI);
+  // Draw the building
+  fill(125);
+  box(building.width, building.height, building.depth);
 
+  // Draw the windows
+  fill(255);
+  for (let y = -building.height / 2 + building.windowSizeY; y < building.height / 2 - building.windowSizeY; y += building.windowSizeY * 2) {
+    for (let x = -building.width / 2 + building.windowSizeX; x < building.width / 2 - building.windowSizeX; x += building.windowSizeX * 2) {
+      // Draw windows on front and back
+      push();
+      translate(x, y, building.depth / 2 + 1);
+      rect(0, 0, building.windowSizeX, building.windowSizeY);
+      translate(0, 0, -building.depth - 2);
+      rect(0, 0, building.windowSizeX, building.windowSizeY);
+      pop();
+    }
+
+    for (let z = -building.depth / 2 + building.windowSizeY; z < building.depth / 2 - building.windowSizeY; z += building.windowSizeY * 2) {
+      // Draw windows on sides
+      push();
+      translate(building.width / 2 + 1, y, z);
+      rotateY(HALF_PI);
+      rect(0, 0, building.windowSizeX, building.windowSizeY);
+      translate(0, 0, -building.width - 2);
+      rect(0, 0, building.windowSizeX, building.windowSizeY);
+      pop();
+    }
+  }
+}
+
+
+class Building {
+    constructor(x, y, width, depth, shape) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.depth = depth;
+        this.height = random(100,300);
+        this.shape = shape;
+    }
+    
+    setWindowSize(){
+      this.windowSizeX = this.width / 15;
+      this.windowSizeY = this.depth / 15;
+    }
+}
+
+function defineBuildings(grid, minBuildingSize = 50) {
+    let maxBuildingSize = minBuildingSize * 2;
+    let buildings = [];
+
+    function canPlaceBuilding(x, y, width, depth) {
+        if (x + width + gridSize > grid.length || y + depth + gridSize > grid[0].length || x - gridSize < 0 || y - gridSize < 0) {
+            return false;
+        }
+
+        for (let i = x - gridSize; i < x + width + gridSize; i++) {
+            for (let j = y - gridSize; j < y + depth + gridSize; j++) {
+                if (grid[i][j].type !== null) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    function placeBuilding(x, y, width, depth, shape) {
+        let building = new Building(x, y, width, depth, shape);
+        building.setWindowSize();
+        buildings.push(building);
+
+        for (let i = x - gridSize; i < x + width + gridSize; i++) {
+            for (let j = y - gridSize; j < y + depth + gridSize; j++) {
+                if(i < x || i >= x + width || j < y || j >= y + depth) {
+                    grid[i][j].setType('border');
+                } else {
+                    grid[i][j].setType('building');
+                }
+            }
+        }
+    }
+
+    let points = [];
+    for (let i = gridSize; i < grid.length - 1 - gridSize; i += gridSize) {
+        for (let j = gridSize; j < grid[0].length - 1 - gridSize; j += gridSize) {
+            if (i % gridSize === 0 && j % gridSize === 0) {
+                points.push({x: i, y: j});
+            }
+        }
+    }
+
+    points.sort(() => Math.random() - 0.5);
+
+    for (let point of points) {
+        let shape = Math.random() < 0.5 ? 'square' : 'rectangle';
+        let width, depth;
+
+        if (shape === 'rectangle') {
+            width = Math.floor((Math.random() * (maxBuildingSize - minBuildingSize + 1) + minBuildingSize) / gridSize) * gridSize;
+            depth = Math.floor((Math.random() * (maxBuildingSize - minBuildingSize + 1) + minBuildingSize) / gridSize) * gridSize;
+        } else {
+            width = depth = Math.floor((Math.random() * (maxBuildingSize - minBuildingSize + 1) + minBuildingSize) / gridSize) * gridSize;
+        }
+
+        if (canPlaceBuilding(point.x, point.y, width, depth)) {
+            placeBuilding(point.x, point.y, width, depth, shape);
+        }
+    }
+
+    return buildings;
+}
+
+function drawBuildings(buildings){
+  buildings.forEach((building) => {
+    push(); // Start a new drawing state
+    let xc = building.x + building.width / 2;
+    let yc = building.y + building.depth / 2;
+    translate(xc, yc, 0);
+    drawBuilding(building);
+    pop(); // Restore original state
+  });
+  
+}
 
 function draw() {
   background(200, 200, 200);
@@ -623,12 +690,14 @@ function draw() {
   // Initialize grid
   let grid = new Array(canvasWidth);
   let intersections = [];
+  let buildings = [];
   grid = initMap(grid);
   [grid, intersections] = populateIntersections(grid, intersections);
   defineRoads(grid, intersections);
   defineBorders(grid, roadBorder);
   drawDashedLinesBetweenIntersections(intersections);
   finalizeMap(grid, intersections);
+  buildings = defineBuildings(grid);
+  drawBuildings(buildings);
   if (debug) debugCellType(grid);
-  //defineBuildings(grid);
 }
