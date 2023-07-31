@@ -1,14 +1,15 @@
 // Base Map settings
 let canvasWidth = 600;
 let canvasHeight = canvasWidth*1.5;
-let gridSize = 10;
-let intersectBorder = gridSize*10;
-let mapBorder = gridSize*6
+let gridSize = 5;
+let intersectBorder = gridSize*15;
+let mapBorder = gridSize*2;
 let roadBorder = gridSize;
-let intersectionDensity = 0.3;
-let minBuildingSize = 50;
+let intersectionDensity = 0.5;
+let minBuildingSize = 20;
 let maxBuildingSize = minBuildingSize*3;
-let debug = true;
+let debug = false;
+let colors = [];
 
 
 class Cell {
@@ -75,9 +76,27 @@ function getPixels(x0, y0, x1, y1, strokeWidth) {
 
 
 function setup() {
-    pixelDensity(1); // ensures one unit in the canvas corresponds to one pixel
-    createCanvas(canvasWidth, canvasHeight, WEBGL);
-    noLoop();
+  const colorValues = [
+    [233, 255, 103],
+    [224, 137, 97],
+    [241, 172, 108],
+    [182, 212, 182],
+    [222, 136, 96],
+    [216, 120, 93],
+    [176, 85, 78],
+    [201, 210, 165],
+    [194, 106, 97],
+    [64, 123, 117],
+    [205, 212, 165],
+    [162, 202, 180],
+    [76, 129, 117]
+  ];
+  colorValues.forEach(colorValue => {
+    colors.push(color(...colorValue));
+  });
+  pixelDensity(1); // ensures one unit in the canvas corresponds to one pixel
+  createCanvas(canvasWidth, canvasHeight, WEBGL);
+  noLoop();
 }
 
 function initMap(grid){
@@ -550,22 +569,29 @@ function drawDashedLines(startX, startY, endX, endY){
 }
 
 // BUILDINGS DEFINITIONS
+
 function drawBuilding(building) {
   rotateX(HALF_PI);
+  
   // Draw the building
-  fill(125);
+  let buildingColor = colors[Math.floor(Math.random() * colors.length)];
+
+  fill(buildingColor);
   box(building.width, building.height, building.depth);
 
+  drawHandDrawnBox(building);
+  
   // Draw the windows
-  fill(255);
+  fill(0);
+  let maxDisplacement = 1;  // Maximum displacement for the hand-drawn effect
   for (let y = -building.height / 2 + building.windowSizeY; y < building.height / 2 - building.windowSizeY; y += building.windowSizeY * 2) {
     for (let x = -building.width / 2 + building.windowSizeX; x < building.width / 2 - building.windowSizeX; x += building.windowSizeX * 2) {
       // Draw windows on front and back
       push();
       translate(x, y, building.depth / 2 + 1);
-      rect(0, 0, building.windowSizeX, building.windowSizeY);
+      drawHandDrawnRect(0, 0, building.windowSizeX, building.windowSizeY, maxDisplacement);
       translate(0, 0, -building.depth - 2);
-      rect(0, 0, building.windowSizeX, building.windowSizeY);
+      drawHandDrawnRect(0, 0, building.windowSizeX, building.windowSizeY, maxDisplacement);
       pop();
     }
 
@@ -574,12 +600,44 @@ function drawBuilding(building) {
       push();
       translate(building.width / 2 + 1, y, z);
       rotateY(HALF_PI);
-      rect(0, 0, building.windowSizeX, building.windowSizeY);
+      drawHandDrawnRect(0, 0, building.windowSizeX, building.windowSizeY, maxDisplacement);
       translate(0, 0, -building.width - 2);
-      rect(0, 0, building.windowSizeX, building.windowSizeY);
+      drawHandDrawnRect(0, 0, building.windowSizeX, building.windowSizeY, maxDisplacement);
       pop();
     }
   }
+}
+
+function drawHandDrawnBox(building) {
+  stroke(0);
+  strokeWeight(1);
+  // Draw 12 lines forming the edges of the box
+  line(-building.width/2, -building.height/2, building.depth/2, building.width/2, -building.height/2, building.depth/2);
+  line(building.width/2, -building.height/2, building.depth/2, building.width/2, building.height/2, building.depth/2);
+  line(building.width/2, building.height/2, building.depth/2, -building.width/2, building.height/2, building.depth/2);
+  line(-building.width/2, building.height/2, building.depth/2, -building.width/2, -building.height/2, building.depth/2);
+  
+  line(-building.width/2, -building.height/2, -building.depth/2, building.width/2, -building.height/2, -building.depth/2);
+  line(building.width/2, -building.height/2, -building.depth/2, building.width/2, building.height/2, -building.depth/2);
+  line(building.width/2, building.height/2, -building.depth/2, -building.width/2, building.height/2, -building.depth/2);
+  line(-building.width/2, building.height/2, -building.depth/2, -building.width/2, -building.height/2, -building.depth/2);
+  
+  line(-building.width/2, -building.height/2, building.depth/2, -building.width/2, -building.height/2, -building.depth/2);
+  line(building.width/2, -building.height/2, building.depth/2, building.width/2, -building.height/2, -building.depth/2);
+  line(building.width/2, building.height/2, building.depth/2, building.width/2, building.height/2, -building.depth/2);
+  line(-building.width/2, building.height/2, building.depth/2, -building.width/2, building.height/2, -building.depth/2);
+}
+
+function drawHandDrawnRect(x, y, width, height, maxDisplacement) {
+  // Draw a rectangle in 4 segments with small random displacements to create a hand-drawn effect
+  line(x + random(-maxDisplacement, maxDisplacement), y + random(-maxDisplacement, maxDisplacement), 
+       x + width + random(-maxDisplacement, maxDisplacement), y + random(-maxDisplacement, maxDisplacement));
+  line(x + width + random(-maxDisplacement, maxDisplacement), y + random(-maxDisplacement, maxDisplacement), 
+       x + width + random(-maxDisplacement, maxDisplacement), y + height + random(-maxDisplacement, maxDisplacement));
+  line(x + width + random(-maxDisplacement, maxDisplacement), y + height + random(-maxDisplacement, maxDisplacement), 
+       x + random(-maxDisplacement, maxDisplacement), y + height + random(-maxDisplacement, maxDisplacement));
+  line(x + random(-maxDisplacement, maxDisplacement), y + height + random(-maxDisplacement, maxDisplacement), 
+       x + random(-maxDisplacement, maxDisplacement), y + random(-maxDisplacement, maxDisplacement));
 }
 
 
@@ -589,13 +647,13 @@ class Building {
         this.y = y;
         this.width = width;
         this.depth = depth;
-        this.height = random(100,300);
+        this.height = random(100,200);
         this.shape = shape;
     }
     
     setWindowSize(){
-      this.windowSizeX = this.width / 15;
-      this.windowSizeY = this.depth / 15;
+      this.windowSizeX = this.width / random(10,15);
+      this.windowSizeY = this.height / random(10,15);
     }
 }
 
@@ -677,7 +735,8 @@ function drawBuildings(buildings){
 }
 
 function draw() {
-  background(200, 200, 200);
+  //background(200, 200, 200);
+  background(243,237,229);
   translate(-canvasWidth / 2, -canvasHeight / 2, 0);  // move origin to top-left corner
   if (debug){
     blendMode(DIFFERENCE);
