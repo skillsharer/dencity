@@ -6,7 +6,9 @@ let intersectBorder = gridSize*10;
 let mapBorder = gridSize*6
 let roadBorder = gridSize;
 let intersectionDensity = 0.3;
-let debug = false;
+let minBuildingSize = 50;
+let maxBuildingSize = minBuildingSize*3;
+let debug = true;
 
 
 class Cell {
@@ -597,8 +599,7 @@ class Building {
     }
 }
 
-function defineBuildings(grid, minBuildingSize = 50) {
-    let maxBuildingSize = minBuildingSize * 2;
+function defineBuildings(grid) {
     let buildings = [];
 
     function canPlaceBuilding(x, y, width, depth) {
@@ -668,7 +669,7 @@ function drawBuildings(buildings){
     push(); // Start a new drawing state
     let xc = building.x + building.width / 2;
     let yc = building.y + building.depth / 2;
-    translate(xc, yc, 0);
+    translate(xc, yc, building.height / 2);
     drawBuilding(building);
     pop(); // Restore original state
   });
