@@ -10,6 +10,7 @@ let minBuildingSize = 20;
 let maxBuildingSize = minBuildingSize*3;
 let debug = false;
 let colors = [];
+let maxDisplacement = 1;
 
 
 class Cell {
@@ -242,7 +243,6 @@ function drawDashedLines(startX, startY, endX, endY){
   let gapFactor = 0.5;  // Adjust this to change gap length, value should be between 0 and 1
   let dashLength = (1 - gapFactor) * gridSize;
   let gapLength = gapFactor * gridSize / 2;  // Half of the gap on each side
-  let maxDisplacement = 1;
   stroke(255,255,255);
   strokeWeight(1);
   for (let i = 0; i < numOfSegments; i++){
@@ -264,13 +264,8 @@ function drawRoad(startX, startY, endX, endY, borderOffset = gridSize) {
     // Base road
     stroke(150,150,150);
     strokeWeight(2*gridSize);
-    line(startX, startY, endX, endY);
-  
-  
-    let maxDisplacement = 2; // Maximum displacement from the border line
+    line(startX, startY, endX, endY);  
     let borderDistance = gridSize; // Distance of the border from the road
-    
-
     // Calculate the direction of the road
     let dx = endX - startX;
     let dy = endY - startY;
@@ -384,7 +379,6 @@ function finalizeMap(grid, intersections){
         let numOfCrossWalkLines = 4; // For each half of the road
         let crossWalkLength = 2 * gridSize;
         let gapLength = Math.floor(2 * gridSize / (numOfCrossWalkLines + 1));
-        let maxDisplacement = 1; // in px
         let ix = intersection.x;
         let iy = intersection.y;
         for (let dir of directions){
@@ -550,7 +544,6 @@ function drawDashedLines(startX, startY, endX, endY){
   let gapFactor = 0.5;  // Adjust this to change gap length, value should be between 0 and 1
   let dashLength = (1 - gapFactor) * gridSize;
   let gapLength = gapFactor * gridSize / 2;  // Half of the gap on each side
-  let maxDisplacement = 1;
   stroke(255,255,255);
   strokeWeight(1);
   for (let i = 0; i < numOfSegments; i++){
@@ -578,12 +571,11 @@ function drawBuilding(building) {
 
   fill(buildingColor);
   box(building.width, building.height, building.depth);
-
-  drawHandDrawnBox(building);
+  drawHandDrawnBox(building, maxDisplacement);
   
   // Draw the windows
+  // Draw separated windows
   fill(0);
-  let maxDisplacement = 1;  // Maximum displacement for the hand-drawn effect
   for (let y = -building.height / 2 + building.windowSizeY; y < building.height / 2 - building.windowSizeY; y += building.windowSizeY * 2) {
     for (let x = -building.width / 2 + building.windowSizeX; x < building.width / 2 - building.windowSizeX; x += building.windowSizeX * 2) {
       // Draw windows on front and back
@@ -608,24 +600,24 @@ function drawBuilding(building) {
   }
 }
 
-function drawHandDrawnBox(building) {
+function drawHandDrawnBox(building, maxDisplacement) {
   stroke(0);
   strokeWeight(1);
   // Draw 12 lines forming the edges of the box
-  line(-building.width/2, -building.height/2, building.depth/2, building.width/2, -building.height/2, building.depth/2);
-  line(building.width/2, -building.height/2, building.depth/2, building.width/2, building.height/2, building.depth/2);
-  line(building.width/2, building.height/2, building.depth/2, -building.width/2, building.height/2, building.depth/2);
-  line(-building.width/2, building.height/2, building.depth/2, -building.width/2, -building.height/2, building.depth/2);
+  line(-building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement));
+  line(building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement));
+  line(building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), -building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement));
+  line(-building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), -building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement));
   
-  line(-building.width/2, -building.height/2, -building.depth/2, building.width/2, -building.height/2, -building.depth/2);
-  line(building.width/2, -building.height/2, -building.depth/2, building.width/2, building.height/2, -building.depth/2);
-  line(building.width/2, building.height/2, -building.depth/2, -building.width/2, building.height/2, -building.depth/2);
-  line(-building.width/2, building.height/2, -building.depth/2, -building.width/2, -building.height/2, -building.depth/2);
+  line(-building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement), building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
+  line(building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement), building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
+  line(building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement), -building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
+  line(-building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement), -building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
   
-  line(-building.width/2, -building.height/2, building.depth/2, -building.width/2, -building.height/2, -building.depth/2);
-  line(building.width/2, -building.height/2, building.depth/2, building.width/2, -building.height/2, -building.depth/2);
-  line(building.width/2, building.height/2, building.depth/2, building.width/2, building.height/2, -building.depth/2);
-  line(-building.width/2, building.height/2, building.depth/2, -building.width/2, building.height/2, -building.depth/2);
+  line(-building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), -building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
+  line(building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
+  line(building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
+  line(-building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), -building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
 }
 
 function drawHandDrawnRect(x, y, width, height, maxDisplacement) {
@@ -735,7 +727,6 @@ function drawBuildings(buildings){
 }
 
 function draw() {
-  //background(200, 200, 200);
   background(243,237,229);
   translate(-canvasWidth / 2, -canvasHeight / 2, 0);  // move origin to top-left corner
   if (debug){
