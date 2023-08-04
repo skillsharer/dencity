@@ -7,7 +7,7 @@ let mapBorder = gridSize*2;
 let roadBorder = gridSize;
 let intersectionDensity = 0.5;
 let minBuildingSize = 20;
-let maxBuildingSize = minBuildingSize*3;
+let maxBuildingSize = minBuildingSize*4;
 let debug = false;
 let colors = [];
 let maxDisplacement = 1;
@@ -622,6 +622,11 @@ function drawHandDrawnBox(building, maxDisplacement) {
 
 function drawHandDrawnRect(x, y, width, height, maxDisplacement) {
   // Draw a rectangle in 4 segments with small random displacements to create a hand-drawn effect
+  fill(217,217,205);
+  noStroke();
+  rect(x,y,width,height);
+  stroke(0);
+  strokeWeight(1);
   line(x + random(-maxDisplacement, maxDisplacement), y + random(-maxDisplacement, maxDisplacement), 
        x + width + random(-maxDisplacement, maxDisplacement), y + random(-maxDisplacement, maxDisplacement));
   line(x + width + random(-maxDisplacement, maxDisplacement), y + random(-maxDisplacement, maxDisplacement), 
