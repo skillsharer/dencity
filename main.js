@@ -568,13 +568,25 @@ function drawBuilding(building) {
   
   // Draw the building
   let buildingColor = colors[Math.floor(Math.random() * colors.length)];
-
   fill(buildingColor);
-  box(building.width, building.height, building.depth);
-  drawHandDrawnBox(building, maxDisplacement);
-  
-  // Draw the windows
-  // Draw separated windows
+
+  if (building.shape === 'rectangle'){
+    box(building.width, building.height, building.depth);
+    drawHandDrawnBox(building, maxDisplacement);
+    drawWindows(building);
+  } else {
+    if (random(0,1) < 0.1){
+      cylinder(building.width/2, building.height);
+      drawHandDrawnCylinder(building, maxDisplacement);
+    }else {
+      box(building.width, building.height, building.depth);
+      drawHandDrawnBox(building, maxDisplacement);
+      drawWindows(building);
+    }
+  }
+}
+
+function drawWindows(building){
   fill(0);
   for (let y = -building.height / 2 + building.windowSizeY; y < building.height / 2 - building.windowSizeY; y += building.windowSizeY * 2) {
     for (let x = -building.width / 2 + building.windowSizeX; x < building.width / 2 - building.windowSizeX; x += building.windowSizeX * 2) {
@@ -599,6 +611,36 @@ function drawBuilding(building) {
     }
   }
 }
+
+function drawHandDrawnCylinder(building, maxDisplacement) {
+    // Draw the windows
+    fill(0);
+  
+    // Calculate windows and spacings
+    let radius = building.width / 2;
+    let circumference = PI * building.width;  // using the full width since width = 2 * radius
+    let windowsInCircumference = Math.floor(circumference / building.windowSizeX);
+    let spacingAngle = TWO_PI / windowsInCircumference;
+  
+    for (let z = building.height / 2 - building.windowSizeY; z > -building.height / 2 + building.windowSizeY; z -= building.windowSizeY * 2) {
+        for (let i = 0; i < windowsInCircumference; i++) {
+            let angle = i * spacingAngle;
+            
+            // Convert polar coordinates (angle and distance from center) to cartesian coordinates
+            let x = radius * cos(angle);
+            let y = radius * sin(angle);
+            
+            push();
+            translate(y, z, x);  // Adjust window position
+            rotateY(angle);     // Rotate window to face outwards
+            drawHandDrawnRect(0, 0, building.windowSizeX, building.windowSizeY, maxDisplacement);
+            pop();
+        }
+    }
+}
+
+
+
 
 function drawHandDrawnBox(building, maxDisplacement) {
   stroke(0);
