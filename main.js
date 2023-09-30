@@ -1,17 +1,16 @@
 // Base Map settings
 let canvasWidth = 600;
 let canvasHeight = canvasWidth*1.5;
-let gridSize = 5;
-let intersectBorder = gridSize*15;
+let gridSize = 4;
+let intersectBorder = gridSize*20;
 let mapBorder = gridSize*2;
 let roadBorder = gridSize;
-let intersectionDensity = 0.5;
-let minBuildingSize = 20;
-let maxBuildingSize = minBuildingSize*4;
+let intersectionDensity = 0.4;
+let minBuildingSize = 30;
+let maxBuildingSize = minBuildingSize*3;
 let debug = false;
 let colors = [];
-let maxDisplacement = 1;
-
+let maxDisplacement = 0.5;
 
 class Cell {
     constructor(x, y) {
@@ -78,20 +77,29 @@ function getPixels(x0, y0, x1, y1, strokeWidth) {
 
 function setup() {
   const colorValues = [
-    [233, 255, 103],
-    [224, 137, 97],
-    [241, 172, 108],
-    [182, 212, 182],
-    [222, 136, 96],
-    [216, 120, 93],
-    [176, 85, 78],
-    [201, 210, 165],
-    [194, 106, 97],
-    [64, 123, 117],
-    [205, 212, 165],
-    [162, 202, 180],
-    [76, 129, 117]
+    [90, 105, 136],
+    [217, 225, 233],
+    [134, 149, 165],
+    [181, 190, 198],
+    [65, 78, 91],
+    [255, 219, 153],
+    [198, 168, 125],
+    [255, 214, 90],
+    [255, 158, 73],
+    [242, 85, 96],
+    [45, 156, 219],
+    [135, 196, 64],
+    [183, 149, 11],
+    [230, 126, 34],
+    [105, 78, 53],
+    [204, 142, 105],
+    [248, 227, 196],
+    [122, 110, 84],
+    [143, 172, 193],
+    [177, 144, 113],
+    [237, 201, 161]
   ];
+
   colorValues.forEach(colorValue => {
     colors.push(color(...colorValue));
   });
@@ -577,7 +585,7 @@ function drawBuilding(building) {
   } else {
     if (random(0,1) < 0.1){
       cylinder(building.width/2, building.height);
-      drawHandDrawnCylinder(building, maxDisplacement);
+      drawCylinderWindows(building);
     }else {
       box(building.width, building.height, building.depth);
       drawHandDrawnBox(building, maxDisplacement);
@@ -586,30 +594,175 @@ function drawBuilding(building) {
   }
 }
 
-function drawWindows(building){
-  fill(0);
-  for (let y = -building.height / 2 + building.windowSizeY; y < building.height / 2 - building.windowSizeY; y += building.windowSizeY * 2) {
-    for (let x = -building.width / 2 + building.windowSizeX; x < building.width / 2 - building.windowSizeX; x += building.windowSizeX * 2) {
-      // Draw windows on front and back
-      push();
-      translate(x, y, building.depth / 2 + 1);
-      drawHandDrawnRect(0, 0, building.windowSizeX, building.windowSizeY, maxDisplacement);
-      translate(0, 0, -building.depth - 2);
-      drawHandDrawnRect(0, 0, building.windowSizeX, building.windowSizeY, maxDisplacement);
-      pop();
+function drawCylinderWindows(building) {
+    push();
+
+    // Colors for window
+    fill(100, 100, 250, 150);  // Semi-transparent blue for window
+    stroke(0);  // Black border
+
+    // Calculate the circumference
+    const circumference = Math.PI * building.width;  // Using width as diameter
+
+    // Calculate number of windows based on available space and window size
+    let numWindowsAround = Math.floor(circumference / building.windowSizeX);
+    let numWindowsVertical = Math.floor(building.height / building.windowSizeY);
+    //console.log(numWindowsAround);
+
+    // Calculate the angular distance between windows
+    let angleBetweenWindows = TWO_PI / numWindowsAround;
+
+    // Draw windows
+    for (let i = 0; i < numWindowsAround; i++) {
+        for (let j = 0; j < numWindowsVertical; j++) {
+            let xCenter = (building.width / 2) * Math.cos(i * angleBetweenWindows);
+            let yCenter = j * building.windowSizeY - building.height/2;
+            let zCenter = (building.width / 2) * Math.sin(i * angleBetweenWindows);
+
+            // Points for the window
+            let topLeft = createVector(xCenter - (building.windowSizeX / 2) * Math.sin(i * angleBetweenWindows),
+                                      yCenter,
+                                      zCenter + (building.windowSizeX / 2) * Math.cos(i * angleBetweenWindows));
+
+            let topRight = createVector(xCenter + (building.windowSizeX / 2) * Math.sin(i * angleBetweenWindows),
+                                      yCenter,
+                                      zCenter - (building.windowSizeX / 2) * Math.cos(i * angleBetweenWindows));
+
+            let bottomLeft = createVector(xCenter - (building.windowSizeX / 2) * Math.sin(i * angleBetweenWindows),
+                                      yCenter + building.windowSizeY,
+                                      zCenter + (building.windowSizeX / 2) * Math.cos(i * angleBetweenWindows));
+
+            let bottomRight = createVector(xCenter + (building.windowSizeX / 2) * Math.sin(i * angleBetweenWindows),
+                                      yCenter + building.windowSizeY,
+                                      zCenter - (building.windowSizeX / 2) * Math.cos(i * angleBetweenWindows));
+
+            beginShape();
+            vertex(topLeft.x, topLeft.y, topLeft.z);
+            vertex(topRight.x, topRight.y, topRight.z);
+            vertex(bottomRight.x, bottomRight.y, bottomRight.z);
+            vertex(bottomLeft.x, bottomLeft.y, bottomLeft.z);
+            endShape(CLOSE);
+        }
     }
 
-    for (let z = -building.depth / 2 + building.windowSizeY; z < building.depth / 2 - building.windowSizeY; z += building.windowSizeY * 2) {
-      // Draw windows on sides
-      push();
-      translate(building.width / 2 + 1, y, z);
-      rotateY(HALF_PI);
-      drawHandDrawnRect(0, 0, building.windowSizeX, building.windowSizeY, maxDisplacement);
-      translate(0, 0, -building.width - 2);
-      drawHandDrawnRect(0, 0, building.windowSizeX, building.windowSizeY, maxDisplacement);
-      pop();
-    }
-  }
+    pop();
+}
+
+function check_quarter(building) {
+  /*
+  0: Top-left
+  1: Top-Right
+  2: Bottom-left
+  3: Bottom-right
+  */
+  let horizontal = (building.x <= canvasWidth / 2) ? 0 : 1;
+  let vertical = (building.y <= canvasHeight / 2) ? 0 : 1;
+  return 2 * vertical + horizontal;
+}
+
+
+function drawWindows(building) {
+    const quarter = check_quarter(building);
+
+    const actualWindowSizeX = building.windowSizeX - building.gapSizeX;
+    const actualWindowSizeY = building.windowSizeY - building.gapSizeY;
+    const actualWindowSizeZ = building.windowSizeZ - building.gapSizeZ;
+
+    fill(100, 100, 250, 150);
+    stroke(0);
+
+    const numWindowsX = Math.floor(building.width / building.windowSizeX);
+    const numWindowsY = Math.floor(building.height / building.windowSizeY);
+    const numWindowsZ = Math.floor(building.depth / building.windowSizeZ);
+
+    const halfWidth = -building.width / 2;
+    const halfHeight = -building.height / 2;
+    const halfDepth = -building.depth / 2;
+  
+    const halfGapSizeX = building.gapSizeX/2;
+    const halfGapSizeY = building.gapSizeY/2;
+    const halfGapSizeZ = building.gapSizeZ/2;
+
+    const displacedVertex = (x, y, z = undefined, displacements) => { 
+        if (z === undefined) {
+            vertex(x + displacements[0], y + displacements[1]);
+        } else {
+            vertex(x + displacements[0], y + displacements[1], z);
+        }
+    };
+
+    const calculateVertices = (i, j, face) => {
+        const ix = halfWidth + i * building.windowSizeX + halfGapSizeX;
+        const jy = j * building.windowSizeY + halfGapSizeY;
+        const iz = halfDepth + i * building.windowSizeZ + halfGapSizeZ;
+
+        const displacements = Array.from({ length: 4 }, () => [
+            random(-maxDisplacement, maxDisplacement),
+            random(-maxDisplacement, maxDisplacement)
+        ]);
+
+        switch (face) {
+            case 'front':
+                return displacements.map((d, idx) => {
+                    const base = [
+                        [ix, jy],
+                        [ix + actualWindowSizeX, jy],
+                        [ix + actualWindowSizeX, jy + actualWindowSizeY],
+                        [ix, jy + actualWindowSizeY]
+                    ];
+                    return [base[idx][0] + d[0], base[idx][1] + d[1]];
+                });
+            case 'right':
+                return displacements.map((d, idx) => {
+                    const base = [
+                        [building.width / 2, jy, iz],
+                        [building.width / 2, jy + actualWindowSizeY, iz],
+                        [building.width / 2, jy + actualWindowSizeY, iz + actualWindowSizeZ],
+                        [building.width / 2, jy, iz + actualWindowSizeZ]
+                    ];
+                    return [base[idx][0] + d[0], base[idx][1] + d[1], base[idx][2]];
+                });
+            case 'left':
+                return displacements.map((d, idx) => {
+                    const base = [
+                        [halfWidth, jy, iz],
+                        [halfWidth, jy + actualWindowSizeY, iz],
+                        [halfWidth, jy + actualWindowSizeY, iz + actualWindowSizeZ],
+                        [halfWidth, jy, iz + actualWindowSizeZ]
+                    ];
+                    return [base[idx][0] + d[0], base[idx][1] + d[1], base[idx][2]];
+                });
+            case 'back':
+                return displacements.map((d, idx) => {
+                    const base = [
+                        [ix, jy, building.depth/2],
+                        [ix + actualWindowSizeX, jy, building.depth/2],
+                        [ix + actualWindowSizeX, jy + actualWindowSizeY, building.depth/2],
+                        [ix, jy + actualWindowSizeY, building.depth/2]
+                    ];
+                    return [base[idx][0] + d[0], base[idx][1] + d[1], base[idx][2]];
+                });
+        }
+    };
+
+    const drawFaceWindows = (face, numX, numY, translateX, translateY, translateZ) => {
+        push();
+        translate(translateX, translateY, translateZ);
+        for (let i = 0; i < numX; i++) {
+            for (let j = 0; j < numY; j++) {
+                const vertices = calculateVertices(i, j, face);
+                beginShape();
+                vertices.forEach(v => vertex(...v)); // Directly use the displaced vertices
+                endShape(CLOSE);
+            }
+        }
+        pop();
+    };
+
+    if ([0, 1].includes(quarter)) drawFaceWindows('front', numWindowsX, numWindowsY, 0, halfHeight, halfDepth - 1);
+    if ([0, 2].includes(quarter)) drawFaceWindows('right', numWindowsZ, numWindowsY, 1, halfHeight, 0);
+    if ([1, 3].includes(quarter)) drawFaceWindows('left', numWindowsZ, numWindowsY, -1, halfHeight, 0);
+    if ([2, 3].includes(quarter)) drawFaceWindows('back', numWindowsX, numWindowsY, 0, halfHeight, 1);
 }
 
 function drawHandDrawnCylinder(building, maxDisplacement) {
@@ -639,46 +792,42 @@ function drawHandDrawnCylinder(building, maxDisplacement) {
     }
 }
 
-
-
-
 function drawHandDrawnBox(building, maxDisplacement) {
-  stroke(0);
-  strokeWeight(1);
-  // Draw 12 lines forming the edges of the box
-  line(-building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement));
-  line(building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement));
-  line(building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), -building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement));
-  line(-building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), -building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement));
-  
-  line(-building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement), building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
-  line(building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement), building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
-  line(building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement), -building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
-  line(-building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement), -building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
-  
-  line(-building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), -building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
-  line(building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), building.width/2 + random(-maxDisplacement, maxDisplacement), -building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
-  line(building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
-  line(-building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), building.depth/2 + random(-maxDisplacement, maxDisplacement), -building.width/2 + random(-maxDisplacement, maxDisplacement), building.height/2 + random(-maxDisplacement, maxDisplacement), -building.depth/2 + random(-maxDisplacement, maxDisplacement));
-}
+    stroke(0);
+    strokeWeight(1);
 
-function drawHandDrawnRect(x, y, width, height, maxDisplacement) {
-  // Draw a rectangle in 4 segments with small random displacements to create a hand-drawn effect
-  fill(217,217,205);
-  noStroke();
-  rect(x,y,width,height);
-  stroke(0);
-  strokeWeight(1);
-  line(x + random(-maxDisplacement, maxDisplacement), y + random(-maxDisplacement, maxDisplacement), 
-       x + width + random(-maxDisplacement, maxDisplacement), y + random(-maxDisplacement, maxDisplacement));
-  line(x + width + random(-maxDisplacement, maxDisplacement), y + random(-maxDisplacement, maxDisplacement), 
-       x + width + random(-maxDisplacement, maxDisplacement), y + height + random(-maxDisplacement, maxDisplacement));
-  line(x + width + random(-maxDisplacement, maxDisplacement), y + height + random(-maxDisplacement, maxDisplacement), 
-       x + random(-maxDisplacement, maxDisplacement), y + height + random(-maxDisplacement, maxDisplacement));
-  line(x + random(-maxDisplacement, maxDisplacement), y + height + random(-maxDisplacement, maxDisplacement), 
-       x + random(-maxDisplacement, maxDisplacement), y + random(-maxDisplacement, maxDisplacement));
-}
+    const disp = () => random(-maxDisplacement, maxDisplacement);
 
+    const points = [
+        [-building.width/2, -building.height/2, building.depth/2],
+        [building.width/2, -building.height/2, building.depth/2],
+        [building.width/2, building.height/2, building.depth/2],
+        [-building.width/2, building.height/2, building.depth/2],
+        [-building.width/2, -building.height/2, -building.depth/2],
+        [building.width/2, -building.height/2, -building.depth/2],
+        [building.width/2, building.height/2, -building.depth/2],
+        [-building.width/2, building.height/2, -building.depth/2]
+    ].map(pt => pt.map(val => val + disp()));
+
+    const edgesToDraw = [
+        [points[0], points[1]],
+        [points[1], points[2]],
+        [points[2], points[3]],
+        [points[3], points[0]],
+        [points[4], points[5]],
+        [points[5], points[6]],
+        [points[6], points[7]],
+        [points[7], points[4]],
+        [points[0], points[4]],
+        [points[1], points[5]],
+        [points[2], points[6]],
+        [points[3], points[7]]
+    ];
+
+    for (const edge of edgesToDraw) {
+        line(...edge[0], ...edge[1]);
+    }
+}
 
 class Building {
     constructor(x, y, width, depth, shape) {
@@ -686,13 +835,17 @@ class Building {
         this.y = y;
         this.width = width;
         this.depth = depth;
-        this.height = random(100,200);
+        this.height = random(100,300);
         this.shape = shape;
     }
     
     setWindowSize(){
-      this.windowSizeX = this.width / random(10,15);
-      this.windowSizeY = this.height / random(10,15);
+      this.windowSizeX = this.width / random(1,15);
+      this.windowSizeY = this.height / random(1,15);
+      this.windowSizeZ = this.depth / random(1,15);
+      this.gapSizeX = this.windowSizeX / random(1,10);
+      this.gapSizeY = this.windowSizeY / random(1,10);
+      this.gapSizeZ = this.windowSizeZ /random(1,10);
     }
 }
 
@@ -770,7 +923,6 @@ function drawBuildings(buildings){
     drawBuilding(building);
     pop(); // Restore original state
   });
-  
 }
 
 function draw() {
