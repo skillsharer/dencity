@@ -74,6 +74,14 @@ function getPixels(x0, y0, x1, y1, strokeWidth) {
   return pixels;
 }
 
+function getDate(){
+  let currentDate = new Date(); // Get the current date and time
+  let hours = currentDate.getHours();
+  let minutes = currentDate.getMinutes();
+  let seconds = currentDate.getSeconds();
+  return [hours, minutes, seconds]
+}
+
 
 function setup() {
   const colorValues = [
@@ -105,6 +113,8 @@ function setup() {
   });
   pixelDensity(1); // ensures one unit in the canvas corresponds to one pixel
   createCanvas(canvasWidth, canvasHeight, WEBGL);
+  //camera(0, 1000, -height / tan(-PI*50.0 / 180.0), 0, 0, 0, 0, 1, -1);
+
   noLoop();
 }
 
@@ -569,7 +579,49 @@ function drawDashedLines(startX, startY, endX, endY){
   }
 }
 
-// BUILDINGS DEFINITIONS
+////////////////////////////////// BUILDINGS DEFINITIONS //////////////////////////////////
+
+class Building {
+    constructor(x, y, width, depth, shape) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.depth = depth;
+        this.height = random(100,300);
+        this.shape = shape;
+    }
+    
+    setWindowSize(){
+      this.windowSizeX = this.width / random(1,15);
+      this.windowSizeY = this.height / random(1,15);
+      this.windowSizeZ = this.depth / random(1,15);
+      this.gapSizeX = this.windowSizeX / random(1,10);
+      this.gapSizeY = this.windowSizeY / random(1,10);
+      this.gapSizeZ = this.windowSizeZ /random(1,10);
+    }
+}
+
+function defineSetBack(building, setbacks = [1, 0.9, 0.85]){
+  push();
+  let combinedHeight = 0;
+  for (let i = 0; i < setbacks.length; i++) {
+    combinedHeight += building.height / (setbacks.length + 1); // Adding height of each section
+  }
+  let yOffset = -combinedHeight/ 2;
+  for (let i = 0; i < setbacks.length; i++) {
+    const upSize = setbacks[i];
+    translate(0, yOffset, 0);
+    const currentWidth = building.width * upSize;
+    const currentHeight = building.height / (setbacks.length + 1); // Split height among levels
+    const currentDepth = building.depth * upSize;
+
+    box(currentWidth, currentHeight, currentDepth);
+    drawHandDrawnBox(currentWidth, currentHeight, currentDepth, maxDisplacement);
+
+    yOffset = currentHeight; 
+  }
+  pop();
+}
 
 function drawBuilding(building) {
   rotateX(HALF_PI);
@@ -580,18 +632,26 @@ function drawBuilding(building) {
 
   if (building.shape === 'rectangle'){
     box(building.width, building.height, building.depth);
-    drawHandDrawnBox(building, maxDisplacement);
+    drawHandDrawnBox(building.width, building.height, building.depth, maxDisplacement);
     drawWindows(building);
   } else {
     if (random(0,1) < 0.1){
       cylinder(building.width/2, building.height);
       drawCylinderWindows(building);
     }else {
-      box(building.width, building.height, building.depth);
-      drawHandDrawnBox(building, maxDisplacement);
-      drawWindows(building);
+      defineSetBack(building);
+      //finalizeBuildingShape(building);
+      //box(building.width, building.height, building.depth);
+      //drawHandDrawnBox(building, maxDisplacement);
+      //drawWindows(building);
     }
   }
+}
+
+
+
+function finalizeBuildingShape(building){
+  defineSetBack(building);
 }
 
 function drawCylinderWindows(building) {
@@ -792,21 +852,21 @@ function drawHandDrawnCylinder(building, maxDisplacement) {
     }
 }
 
-function drawHandDrawnBox(building, maxDisplacement) {
+function drawHandDrawnBox(width, height, depth, maxDisplacement) {
     stroke(0);
     strokeWeight(1);
 
     const disp = () => random(-maxDisplacement, maxDisplacement);
 
     const points = [
-        [-building.width/2, -building.height/2, building.depth/2],
-        [building.width/2, -building.height/2, building.depth/2],
-        [building.width/2, building.height/2, building.depth/2],
-        [-building.width/2, building.height/2, building.depth/2],
-        [-building.width/2, -building.height/2, -building.depth/2],
-        [building.width/2, -building.height/2, -building.depth/2],
-        [building.width/2, building.height/2, -building.depth/2],
-        [-building.width/2, building.height/2, -building.depth/2]
+        [-width/2, -height/2, depth/2],
+        [width/2, -height/2, depth/2],
+        [width/2, height/2, depth/2],
+        [-width/2, height/2, depth/2],
+        [-width/2, -height/2, -depth/2],
+        [width/2, -height/2, -depth/2],
+        [width/2, height/2, -depth/2],
+        [-width/2, height/2, -depth/2]
     ].map(pt => pt.map(val => val + disp()));
 
     const edgesToDraw = [
@@ -826,26 +886,6 @@ function drawHandDrawnBox(building, maxDisplacement) {
 
     for (const edge of edgesToDraw) {
         line(...edge[0], ...edge[1]);
-    }
-}
-
-class Building {
-    constructor(x, y, width, depth, shape) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.depth = depth;
-        this.height = random(100,300);
-        this.shape = shape;
-    }
-    
-    setWindowSize(){
-      this.windowSizeX = this.width / random(1,15);
-      this.windowSizeY = this.height / random(1,15);
-      this.windowSizeZ = this.depth / random(1,15);
-      this.gapSizeX = this.windowSizeX / random(1,10);
-      this.gapSizeY = this.windowSizeY / random(1,10);
-      this.gapSizeZ = this.windowSizeZ /random(1,10);
     }
 }
 
