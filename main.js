@@ -645,7 +645,39 @@ class Building {
         }
         return buildingShape;
     }
+  
+    defineBox(){
+      box(this.width, this.height, this.depth);
+      drawHandDrawnBox(this.width, this.height, this.depth, maxDisplacement);
+      drawWindows(this);
+    }
 
+    defineCylinder(){
+      cylinder(this.width/2, this.height);
+      drawCylinderWindows(this);
+    }
+
+    defineSetBack(setbacks = [1, 0.9]){
+      push();
+      let combinedHeight = 0;
+      for (let i = 0; i < setbacks.length; i++) {
+        combinedHeight += this.height / (setbacks.length + 1); // Adding height of each section
+      }
+      let yOffset = -combinedHeight/ 2;
+      for (let i = 0; i < setbacks.length; i++) {
+        const upSize = setbacks[i];
+        translate(0, yOffset, 0);
+        const currentWidth = this.width * upSize;
+        const currentHeight = this.height / (setbacks.length + 1); // Split height among levels
+        const currentDepth = this.depth * upSize;
+
+        box(currentWidth, currentHeight, currentDepth);
+        drawHandDrawnBox(currentWidth, currentHeight, currentDepth, maxDisplacement);
+
+        yOffset = currentHeight; 
+      }
+      pop();
+    }
 
     drawBuilding(){
       push();
@@ -660,50 +692,17 @@ class Building {
       
       switch(this.shape){
         case 'rectangle':
-          defineBox(this);
+          this.defineBox();
           break;
         case 'cylinder':
-          defineCylinder(this);
+          this.defineCylinder();
           break;  
         case 'set_back':
-          defineSetBack(this);
+          this.defineSetBack();
           break;
       };
       pop();
     }
-}
-
-function defineBox(building){
-  box(building.width, building.height, building.depth);
-  drawHandDrawnBox(building.width, building.height, building.depth, maxDisplacement);
-  drawWindows(building);
-}
-
-function defineCylinder(building){
-  cylinder(building.width/2, building.height);
-  drawCylinderWindows(building);
-}
-
-function defineSetBack(building, setbacks = [1, 0.9]){
-  push();
-  let combinedHeight = 0;
-  for (let i = 0; i < setbacks.length; i++) {
-    combinedHeight += building.height / (setbacks.length + 1); // Adding height of each section
-  }
-  let yOffset = -combinedHeight/ 2;
-  for (let i = 0; i < setbacks.length; i++) {
-    const upSize = setbacks[i];
-    translate(0, yOffset, 0);
-    const currentWidth = building.width * upSize;
-    const currentHeight = building.height / (setbacks.length + 1); // Split height among levels
-    const currentDepth = building.depth * upSize;
-
-    box(currentWidth, currentHeight, currentDepth);
-    drawHandDrawnBox(currentWidth, currentHeight, currentDepth, maxDisplacement);
-
-    yOffset = currentHeight; 
-  }
-  pop();
 }
 
 function drawCylinderWindows(building) {
