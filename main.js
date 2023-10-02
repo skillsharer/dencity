@@ -5,13 +5,12 @@ const gridSize = 5;
 const intersectBorder = gridSize*20;
 const mapBorder = gridSize*2;
 const roadBorder = gridSize;
-const intersectionDensity = 0.4;
-const minBuildingSize = 30;
-const maxBuildingSize = minBuildingSize*3;
-const minBuildingHeight = 250;
-const maxBuildingHeight = 300;
+const intersectionDensity = 0.5;
+const minBuildingSize = 20;
+const maxBuildingSize = minBuildingSize*4;
+const minBuildingHeight = 150;
+const maxBuildingHeight = 200;
 const debug = false;
-const colors = [];
 const maxDisplacement = 0.5;
 const buildingFrameHeight = 7; // Adjust for desired frame thickness
 const buildingFrameInset = 3;  // Adjust for how much you want the frame to be inset
@@ -88,37 +87,9 @@ function getDate(){
 
 
 function setup() {
-  const colorValues = [
-    [90, 105, 136],
-    [217, 225, 233],
-    [134, 149, 165],
-    [181, 190, 198],
-    [65, 78, 91],
-    [255, 219, 153],
-    [198, 168, 125],
-    [255, 214, 90],
-    [255, 158, 73],
-    [242, 85, 96],
-    [45, 156, 219],
-    [135, 196, 64],
-    [183, 149, 11],
-    [230, 126, 34],
-    [105, 78, 53],
-    [204, 142, 105],
-    [248, 227, 196],
-    [122, 110, 84],
-    [143, 172, 193],
-    [177, 144, 113],
-    [237, 201, 161]
-  ];
-
-  colorValues.forEach(colorValue => {
-    colors.push(color(...colorValue));
-  });
   pixelDensity(1); // ensures one unit in the canvas corresponds to one pixel
   createCanvas(canvasWidth, canvasHeight, WEBGL);
-  //camera(0, 1000, -height / tan(-PI*50.0 / 180.0), 0, 0, 0, 0, 1, -1);
-
+  camera(0, 1000, -height / tan(-PI*50.0 / 180.0), 0, 0, 0, 0, 1, -1);
   noLoop();
 }
 
@@ -594,7 +565,35 @@ class Building {
         this.height = random(minBuildingHeight, maxBuildingHeight);
         this.shape = this.define_shape(shape);
         this.quarter = this.check_quarter();
-        this.drawBuilding();
+        this.buildingColor = this.setColor();
+    }
+  
+    setColor(){
+      let colorValues = [
+        [90, 105, 136],
+        [217, 225, 233],
+        [134, 149, 165],
+        [181, 190, 198],
+        [65, 78, 91],
+        [255, 219, 153],
+        [198, 168, 125],
+        [255, 214, 90],
+        [255, 158, 73],
+        [242, 85, 96],
+        [45, 156, 219],
+        [135, 196, 64],
+        [183, 149, 11],
+        [230, 126, 34],
+        [105, 78, 53],
+        [204, 142, 105],
+        [248, 227, 196],
+        [122, 110, 84],
+        [143, 172, 193],
+        [177, 144, 113],
+        [237, 201, 161]
+      ];
+      let colorValue = colorValues[Math.floor(Math.random() * colorValues.length)];
+      return color(...colorValue);
     }
     
     setWindowSize(){
@@ -651,9 +650,12 @@ class Building {
     }
   
     defineBox(){
+      push();
+      fill(this.buildingColor);
       box(this.width, this.height, this.depth);
+      pop();
       if (random() <= 0.5){
-        drawTopFrame(this.height, this.width, this.depth);
+        drawTopFrame(this.height, this.width, this.depth, this.buildingColor);
         drawHandDrawnBox(this.width, this.height + buildingFrameHeight, this.depth, maxDisplacement);
       } else {
         drawHandDrawnBox(this.width, this.height, this.depth, maxDisplacement);
@@ -663,7 +665,10 @@ class Building {
 
     defineCylinder(){
       const radius = this.width / 2;
+      push();
+      fill(this.buildingColor);
       cylinder(radius, this.height);
+      pop();
       drawHandDrawnCylinder(radius, this.height, 20, maxDisplacement);
     }
 
@@ -676,7 +681,7 @@ class Building {
         const currentWidth = this.width * upSize;
         const currentHeight = this.height / setbacks.length; // Split height among levels
         const currentDepth = this.depth * upSize;
-
+        fill(this.buildingColor);
         box(currentWidth, currentHeight, currentDepth);
         drawHandDrawnBox(currentWidth, currentHeight, currentDepth, maxDisplacement);
 
@@ -691,11 +696,7 @@ class Building {
       let yc = this.y + this.depth / 2;
       translate(xc, yc, this.height / 2);
       // Draw comes here
-      rotateX(HALF_PI);
-      // Draw the building
-      let buildingColor = colors[Math.floor(Math.random() * colors.length)];
-      fill(buildingColor);
-      
+      rotateX(HALF_PI);      
       switch(this.shape){
         case 'rectangle':
           this.defineBox();
@@ -916,8 +917,8 @@ function drawHandDrawnCylinder(radius, height, segments, maxDisplacement, horizo
     }
 }
 
-function drawTopFrame(boxHeight, boxWidth, boxDepth) {
-  //stroke(0);
+function drawTopFrame(boxHeight, boxWidth, boxDepth, buildingColor) {
+  fill(buildingColor);
   // Front and Back horizontal frame bars
   push();
   translate(0, boxHeight/2 + buildingFrameHeight, boxDepth/2 - buildingFrameInset/2);
@@ -961,13 +962,12 @@ function drawHandDrawnFrame(boxWidth, boxHeight, boxDepth, maxDisplacement, rota
     push();
     rotateY(rotation);
     fill((247,248,238)); // Fill with white
-  
-    // Draw the filled trapezoid
+    // Draw the trapezoid
     beginShape();
     vertex(...points[2]);
     vertex(...points[3]);
-    vertex(...points[6]);
     vertex(...points[7]);
+    vertex(...points[6]);
     endShape(CLOSE);
     stroke(0);
     strokeWeight(1);
@@ -1037,6 +1037,7 @@ function defineBuildings(grid) {
 
     function placeBuilding(x, y, width, depth, shape) {
         let building = new Building(x, y, width, depth, shape);
+        building.drawBuilding();
         buildings.push(building);
 
         for (let i = x - gridSize; i < x + width + gridSize; i++) {
