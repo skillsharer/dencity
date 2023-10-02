@@ -1,16 +1,20 @@
 // Base Map settings
-let canvasWidth = 600;
-let canvasHeight = canvasWidth*1.5;
-let gridSize = 5;
-let intersectBorder = gridSize*20;
-let mapBorder = gridSize*2;
-let roadBorder = gridSize;
-let intersectionDensity = 0.4;
-let minBuildingSize = 30;
-let maxBuildingSize = minBuildingSize*3;
-let debug = false;
-let colors = [];
-let maxDisplacement = 0.5;
+const canvasWidth = 600;
+const canvasHeight = canvasWidth*1.5;
+const gridSize = 5;
+const intersectBorder = gridSize*20;
+const mapBorder = gridSize*2;
+const roadBorder = gridSize;
+const intersectionDensity = 0.4;
+const minBuildingSize = 30;
+const maxBuildingSize = minBuildingSize*3;
+const minBuildingHeight = 250;
+const maxBuildingHeight = 300;
+const debug = false;
+const colors = [];
+const maxDisplacement = 0.5;
+const buildingFrameHeight = 7; // Adjust for desired frame thickness
+const buildingFrameInset = 3;  // Adjust for how much you want the frame to be inset
 
 class Cell {
     constructor(x, y) {
@@ -587,7 +591,7 @@ class Building {
         this.y = y;
         this.width = width;
         this.depth = depth;
-        this.height = random(100,300);
+        this.height = random(minBuildingHeight, maxBuildingHeight);
         this.shape = this.define_shape(shape);
         this.quarter = this.check_quarter();
         this.drawBuilding();
@@ -648,27 +652,29 @@ class Building {
   
     defineBox(){
       box(this.width, this.height, this.depth);
-      drawHandDrawnBox(this.width, this.height, this.depth, maxDisplacement);
+      if (random() <= 0.5){
+        drawTopFrame(this.height, this.width, this.depth);
+        drawHandDrawnBox(this.width, this.height + buildingFrameHeight, this.depth, maxDisplacement);
+      } else {
+        drawHandDrawnBox(this.width, this.height, this.depth, maxDisplacement);
+      }
       drawWindows(this);
     }
 
     defineCylinder(){
-      cylinder(this.width/2, this.height);
-      drawCylinderWindows(this);
+      const radius = this.width / 2;
+      cylinder(radius, this.height);
+      drawHandDrawnCylinder(radius, this.height, 20, maxDisplacement);
     }
 
     defineSetBack(setbacks = [1, 0.9]){
       push();
-      let combinedHeight = 0;
-      for (let i = 0; i < setbacks.length; i++) {
-        combinedHeight += this.height / (setbacks.length + 1); // Adding height of each section
-      }
-      let yOffset = -combinedHeight/ 2;
+      let yOffset = -this.height / 4;
       for (let i = 0; i < setbacks.length; i++) {
         const upSize = setbacks[i];
         translate(0, yOffset, 0);
         const currentWidth = this.width * upSize;
-        const currentHeight = this.height / (setbacks.length + 1); // Split height among levels
+        const currentHeight = this.height / setbacks.length; // Split height among levels
         const currentDepth = this.depth * upSize;
 
         box(currentWidth, currentHeight, currentDepth);
@@ -863,48 +869,128 @@ function drawWindows(building) {
     if ([2, 3].includes(quarter)) drawFaceWindows('back', numWindowsX, numWindowsY, 0, halfHeight, 1);
 }
 
-function drawHandDrawnCylinder(building, maxDisplacement) {
-    // Draw the windows
-    fill(0);
-  
-    // Calculate windows and spacings
-    let radius = building.width / 2;
-    let circumference = PI * building.width;  // using the full width since width = 2 * radius
-    let windowsInCircumference = Math.floor(circumference / building.windowSizeX);
-    let spacingAngle = TWO_PI / windowsInCircumference;
-  
-    for (let z = building.height / 2 - building.windowSizeY; z > -building.height / 2 + building.windowSizeY; z -= building.windowSizeY * 2) {
-        for (let i = 0; i < windowsInCircumference; i++) {
-            let angle = i * spacingAngle;
-            
-            // Convert polar coordinates (angle and distance from center) to cartesian coordinates
-            let x = radius * cos(angle);
-            let y = radius * sin(angle);
-            
-            push();
-            translate(y, z, x);  // Adjust window position
-            rotateY(angle);     // Rotate window to face outwards
-            drawHandDrawnRect(0, 0, building.windowSizeX, building.windowSizeY, maxDisplacement);
-            pop();
-        }
-    }
-}
-
-function drawHandDrawnBox(width, height, depth, maxDisplacement) {
+function drawHandDrawnCylinder(radius, height, segments, maxDisplacement, horizontalLines = 5) {
     stroke(0);
     strokeWeight(1);
 
     const disp = () => random(-maxDisplacement, maxDisplacement);
 
+    const topPoints = [];
+    const bottomPoints = [];
+    const midPoints = Array.from({ length: horizontalLines }, () => []);
+
+    for (let i = 0; i < segments; i++) {
+        let theta = TWO_PI / segments * i;
+        let x = radius * cos(theta);
+        let y = radius * sin(theta);
+
+        topPoints.push([x + disp(), height / 2 + disp(), y + disp()]);
+        bottomPoints.push([x + disp(), -height / 2 + disp(), y + disp()]);
+
+        for (let j = 0; j < horizontalLines; j++) {
+            let fraction = (j + 1) / (horizontalLines + 1);
+            let z = lerp(-height / 2, height / 2, fraction);
+            midPoints[j].push([x + disp(), z + disp(), y + disp()]);
+        }
+    }
+
+    // Draw the top and bottom circles
+    for (let i = 0; i < segments; i++) {
+        let nextIdx = (i + 1) % segments;
+        
+        line(...topPoints[i], ...topPoints[nextIdx]);
+        line(...bottomPoints[i], ...bottomPoints[nextIdx]);
+    }
+
+    // Draw the sides of the cylinder
+    for (let i = 0; i < segments; i++) {
+        line(...topPoints[i], ...bottomPoints[i]);
+    }
+
+    // Draw the horizontal lines
+    for (let j = 0; j < horizontalLines; j++) {
+        for (let i = 0; i < segments; i++) {
+            let nextIdx = (i + 1) % segments;
+            line(...midPoints[j][i], ...midPoints[j][nextIdx]);
+        }
+    }
+}
+
+function drawTopFrame(boxHeight, boxWidth, boxDepth) {
+  //stroke(0);
+  // Front and Back horizontal frame bars
+  push();
+  translate(0, boxHeight/2 + buildingFrameHeight, boxDepth/2 - buildingFrameInset/2);
+  box(boxWidth, buildingFrameHeight, buildingFrameInset);
+  drawHandDrawnFrame(boxWidth, buildingFrameHeight, buildingFrameInset, maxDisplacement, PI);
+  translate(0, 0, -boxDepth + buildingFrameInset);
+  box(boxWidth, buildingFrameHeight, buildingFrameInset);
+  drawHandDrawnFrame(boxWidth, buildingFrameHeight, buildingFrameInset, maxDisplacement);
+  pop();
+
+  // Left and Right horizontal frame bars
+  push();
+  translate(-boxWidth/2 + buildingFrameInset/2, boxHeight/2 + buildingFrameHeight, 0);
+  box(buildingFrameInset, buildingFrameHeight, boxDepth - 2 * buildingFrameInset);
+  drawHandDrawnFrame(boxDepth, buildingFrameHeight, buildingFrameInset, maxDisplacement, HALF_PI);
+  translate(boxWidth - buildingFrameInset, 0, 0);
+  box(buildingFrameInset, buildingFrameHeight, boxDepth - 2 * buildingFrameInset);
+  drawHandDrawnFrame(boxDepth, buildingFrameHeight, buildingFrameInset, maxDisplacement, -HALF_PI);
+  pop();
+}
+
+function drawHandDrawnFrame(boxWidth, boxHeight, boxDepth, maxDisplacement, rotation=0){
+  const disp = () => random(-maxDisplacement, maxDisplacement);
+  const points = [
+        [-boxWidth/2 + buildingFrameInset, -boxHeight/2, boxDepth/2], // inside bottom left 0
+        [boxWidth/2 - buildingFrameInset, -boxHeight/2, boxDepth/2], // inside bottom right 1
+        [boxWidth/2 - buildingFrameInset, boxHeight/2, boxDepth/2], // inside top right 2
+        [-boxWidth/2 + buildingFrameInset, boxHeight/2, boxDepth/2], // inside top left 3
+        [-boxWidth/2, -boxHeight/2, -boxDepth/2], // outside bottom left 4
+        [boxWidth/2, -boxHeight/2, -boxDepth/2], // outside bottom right 5
+        [boxWidth/2, boxHeight/2, -boxDepth/2], // outside top right 6
+        [-boxWidth/2, boxHeight/2, -boxDepth/2] // outside top left 7
+    ].map(pt => pt.map(val => val + disp()));
+      const edgesToDraw = [
+        [points[0], points[1]],
+        [points[1], points[2]],
+        [points[2], points[3]],
+        [points[3], points[0]],
+        [points[6], points[7]],
+    ];
+    push();
+    rotateY(rotation);
+    fill((247,248,238)); // Fill with white
+  
+    // Draw the filled trapezoid
+    beginShape();
+    vertex(...points[2]);
+    vertex(...points[3]);
+    vertex(...points[6]);
+    vertex(...points[7]);
+    endShape(CLOSE);
+    stroke(0);
+    strokeWeight(1);
+    fill((255,0,0))
+    for (const edge of edgesToDraw) {
+        line(...edge[0], ...edge[1]);
+    }
+    pop();
+}
+
+function drawHandDrawnBox(boxWidth, boxHeight, boxDepth, maxDisplacement) {
+
+    const disp = () => random(-maxDisplacement, maxDisplacement);
+
     const points = [
-        [-width/2, -height/2, depth/2],
-        [width/2, -height/2, depth/2],
-        [width/2, height/2, depth/2],
-        [-width/2, height/2, depth/2],
-        [-width/2, -height/2, -depth/2],
-        [width/2, -height/2, -depth/2],
-        [width/2, height/2, -depth/2],
-        [-width/2, height/2, -depth/2]
+        [-boxWidth/2, -boxHeight/2, boxDepth/2],
+        [boxWidth/2, -boxHeight/2, boxDepth/2],
+        [boxWidth/2, boxHeight/2, boxDepth/2],
+        [-boxWidth/2, boxHeight/2, boxDepth/2],
+        [-boxWidth/2, -boxHeight/2, -boxDepth/2],
+        [boxWidth/2, -boxHeight/2, -boxDepth/2],
+        [boxWidth/2, boxHeight/2, -boxDepth/2],
+        [-boxWidth/2, boxHeight/2, -boxDepth/2]
     ].map(pt => pt.map(val => val + disp()));
 
     const edgesToDraw = [
@@ -921,10 +1007,13 @@ function drawHandDrawnBox(width, height, depth, maxDisplacement) {
         [points[2], points[6]],
         [points[3], points[7]]
     ];
-
+    push();
+    stroke(0);
+    strokeWeight(1);
     for (const edge of edgesToDraw) {
         line(...edge[0], ...edge[1]);
     }
+    pop();
 }
 
 function defineBuildings(grid) {
