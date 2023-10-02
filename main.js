@@ -1,7 +1,7 @@
 // Base Map settings
 let canvasWidth = 600;
 let canvasHeight = canvasWidth*1.5;
-let gridSize = 4;
+let gridSize = 5;
 let intersectBorder = gridSize*20;
 let mapBorder = gridSize*2;
 let roadBorder = gridSize;
@@ -588,7 +588,9 @@ class Building {
         this.width = width;
         this.depth = depth;
         this.height = random(100,300);
-        this.shape = shape;
+        this.shape = this.define_shape(shape);
+        this.quarter = this.check_quarter();
+        this.drawBuilding();
     }
     
     setWindowSize(){
@@ -599,9 +601,90 @@ class Building {
       this.gapSizeY = this.windowSizeY / random(1,10);
       this.gapSizeZ = this.windowSizeZ /random(1,10);
     }
+  
+   check_quarter() {
+      /*
+      0: Top-left
+      1: Top-Right
+      2: Bottom-left
+      3: Bottom-right
+      */
+      let horizontal = (this.x <= canvasWidth / 2) ? 0 : 1;
+      let vertical = (this.y <= canvasHeight / 2) ? 0 : 1;
+      return 2 * vertical + horizontal;
+    }
+  
+    define_shape(shape) {
+        let buildingShape;
+        let shapes;
+        let weights;
+        let cumulativeWeights = [];
+        let randomValue;
+
+        if (shape === 'rectangle') {
+            shapes = ['rectangle', 'set_back'];
+            weights = [0.9, 0.1];  // Set your desired weights here
+        } else {
+            shapes = ['rectangle', 'set_back', 'cylinder'];
+            weights = [0.8, 0.1, 0.1];  // Set your desired weights here
+        }
+
+        // Calculate cumulative weights
+        let cumulativeWeight = 0;
+        for (let weight of weights) {
+            cumulativeWeight += weight;
+            cumulativeWeights.push(cumulativeWeight);
+        }
+
+        randomValue = Math.random();
+        for (let i = 0; i < cumulativeWeights.length; i++) {
+            if (randomValue < cumulativeWeights[i]) {
+                buildingShape = shapes[i];
+                break;
+            }
+        }
+        return buildingShape;
+    }
+
+
+    drawBuilding(){
+      push();
+      let xc = this.x + this.width / 2;
+      let yc = this.y + this.depth / 2;
+      translate(xc, yc, this.height / 2);
+      // Draw comes here
+      rotateX(HALF_PI);
+      // Draw the building
+      let buildingColor = colors[Math.floor(Math.random() * colors.length)];
+      fill(buildingColor);
+      
+      switch(this.shape){
+        case 'rectangle':
+          defineBox(this);
+          break;
+        case 'cylinder':
+          defineCylinder(this);
+          break;  
+        case 'set_back':
+          defineSetBack(this);
+          break;
+      };
+      pop();
+    }
 }
 
-function defineSetBack(building, setbacks = [1, 0.9, 0.85]){
+function defineBox(building){
+  box(building.width, building.height, building.depth);
+  drawHandDrawnBox(building.width, building.height, building.depth, maxDisplacement);
+  drawWindows(building);
+}
+
+function defineCylinder(building){
+  cylinder(building.width/2, building.height);
+  drawCylinderWindows(building);
+}
+
+function defineSetBack(building, setbacks = [1, 0.9]){
   push();
   let combinedHeight = 0;
   for (let i = 0; i < setbacks.length; i++) {
@@ -621,37 +704,6 @@ function defineSetBack(building, setbacks = [1, 0.9, 0.85]){
     yOffset = currentHeight; 
   }
   pop();
-}
-
-function drawBuilding(building) {
-  rotateX(HALF_PI);
-  
-  // Draw the building
-  let buildingColor = colors[Math.floor(Math.random() * colors.length)];
-  fill(buildingColor);
-
-  if (building.shape === 'rectangle'){
-    box(building.width, building.height, building.depth);
-    drawHandDrawnBox(building.width, building.height, building.depth, maxDisplacement);
-    drawWindows(building);
-  } else {
-    if (random(0,1) < 0.1){
-      cylinder(building.width/2, building.height);
-      drawCylinderWindows(building);
-    }else {
-      defineSetBack(building);
-      //finalizeBuildingShape(building);
-      //box(building.width, building.height, building.depth);
-      //drawHandDrawnBox(building, maxDisplacement);
-      //drawWindows(building);
-    }
-  }
-}
-
-
-
-function finalizeBuildingShape(building){
-  defineSetBack(building);
 }
 
 function drawCylinderWindows(building) {
@@ -708,21 +760,8 @@ function drawCylinderWindows(building) {
     pop();
 }
 
-function check_quarter(building) {
-  /*
-  0: Top-left
-  1: Top-Right
-  2: Bottom-left
-  3: Bottom-right
-  */
-  let horizontal = (building.x <= canvasWidth / 2) ? 0 : 1;
-  let vertical = (building.y <= canvasHeight / 2) ? 0 : 1;
-  return 2 * vertical + horizontal;
-}
-
-
 function drawWindows(building) {
-    const quarter = check_quarter(building);
+    const quarter = building.quarter;
 
     const actualWindowSizeX = building.windowSizeX - building.gapSizeX;
     const actualWindowSizeY = building.windowSizeY - building.gapSizeY;
@@ -910,7 +949,6 @@ function defineBuildings(grid) {
 
     function placeBuilding(x, y, width, depth, shape) {
         let building = new Building(x, y, width, depth, shape);
-        building.setWindowSize();
         buildings.push(building);
 
         for (let i = x - gridSize; i < x + width + gridSize; i++) {
@@ -954,17 +992,6 @@ function defineBuildings(grid) {
     return buildings;
 }
 
-function drawBuildings(buildings){
-  buildings.forEach((building) => {
-    push(); // Start a new drawing state
-    let xc = building.x + building.width / 2;
-    let yc = building.y + building.depth / 2;
-    translate(xc, yc, building.height / 2);
-    drawBuilding(building);
-    pop(); // Restore original state
-  });
-}
-
 function draw() {
   background(243,237,229);
   translate(-canvasWidth / 2, -canvasHeight / 2, 0);  // move origin to top-left corner
@@ -988,6 +1015,5 @@ function draw() {
   drawDashedLinesBetweenIntersections(intersections);
   finalizeMap(grid, intersections);
   buildings = defineBuildings(grid);
-  drawBuildings(buildings);
   if (debug) debugCellType(grid);
 }
