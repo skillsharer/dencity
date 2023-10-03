@@ -7,12 +7,12 @@ const mapBorder = gridSize*2;
 const roadBorder = gridSize;
 const intersectionDensity = 0.5;
 const minBuildingSize = 20;
-const maxBuildingSize = minBuildingSize*4;
+const maxBuildingSize = minBuildingSize*16;
 const minBuildingHeight = 150;
 const maxBuildingHeight = 200;
 const debug = false;
 const maxDisplacement = 0.5;
-const buildingFrameHeight = 7; // Adjust for desired frame thickness
+const buildingFrameHeight = 5; // Adjust for desired frame thickness
 const buildingFrameInset = 3;  // Adjust for how much you want the frame to be inset
 
 class Cell {
@@ -89,7 +89,7 @@ function getDate(){
 function setup() {
   pixelDensity(1); // ensures one unit in the canvas corresponds to one pixel
   createCanvas(canvasWidth, canvasHeight, WEBGL);
-  camera(0, 1000, -height / tan(-PI*50.0 / 180.0), 0, 0, 0, 0, 1, -1);
+  //camera(0, 1000, -height / tan(-PI*60.0 / 180.0), 0, 0, 0, 0, 1, -1);
   noLoop();
 }
 
@@ -343,7 +343,6 @@ function countNumRoads(grid, intersection){
 function finalizeMap(grid, intersections){
   fill(150,150,150);
   noStroke();
-
   intersections = intersections.filter(intersection => {
     let x = intersection.x - gridSize;
     let y = intersection.y - gridSize;
@@ -650,13 +649,11 @@ class Building {
     }
   
     defineBox(){
-      push();
       fill(this.buildingColor);
       box(this.width, this.height, this.depth);
-      pop();
       if (random() <= 0.5){
-        drawTopFrame(this.height, this.width, this.depth, this.buildingColor);
         drawHandDrawnBox(this.width, this.height + buildingFrameHeight, this.depth, maxDisplacement);
+        drawTopFrame(this.height, this.width, this.depth, this.buildingColor);
       } else {
         drawHandDrawnBox(this.width, this.height, this.depth, maxDisplacement);
       }
@@ -665,10 +662,8 @@ class Building {
 
     defineCylinder(){
       const radius = this.width / 2;
-      push();
       fill(this.buildingColor);
       cylinder(radius, this.height);
-      pop();
       drawHandDrawnCylinder(radius, this.height, 20, maxDisplacement);
     }
 
@@ -684,7 +679,6 @@ class Building {
         fill(this.buildingColor);
         box(currentWidth, currentHeight, currentDepth);
         drawHandDrawnBox(currentWidth, currentHeight, currentDepth, maxDisplacement);
-
         yOffset = currentHeight; 
       }
       pop();
@@ -918,8 +912,8 @@ function drawHandDrawnCylinder(radius, height, segments, maxDisplacement, horizo
 }
 
 function drawTopFrame(boxHeight, boxWidth, boxDepth, buildingColor) {
-  fill(buildingColor);
   // Front and Back horizontal frame bars
+  fill(buildingColor);
   push();
   translate(0, boxHeight/2 + buildingFrameHeight, boxDepth/2 - buildingFrameInset/2);
   box(boxWidth, buildingFrameHeight, buildingFrameInset);
@@ -941,7 +935,7 @@ function drawTopFrame(boxHeight, boxWidth, boxDepth, buildingColor) {
 }
 
 function drawHandDrawnFrame(boxWidth, boxHeight, boxDepth, maxDisplacement, rotation=0){
-  const disp = () => random(-maxDisplacement, maxDisplacement);
+  const disp = () => random(-maxDisplacement*2, maxDisplacement*2);
   const points = [
         [-boxWidth/2 + buildingFrameInset, -boxHeight/2, boxDepth/2], // inside bottom left 0
         [boxWidth/2 - buildingFrameInset, -boxHeight/2, boxDepth/2], // inside bottom right 1
@@ -961,17 +955,17 @@ function drawHandDrawnFrame(boxWidth, boxHeight, boxDepth, maxDisplacement, rota
     ];
     push();
     rotateY(rotation);
-    fill((247,248,238)); // Fill with white
+    translate(0, 1, 0);  // Add the slight Z offset here
+    fill((247,236,215)); // Fill with white
     // Draw the trapezoid
     beginShape();
     vertex(...points[2]);
-    vertex(...points[3]);
-    vertex(...points[7]);
     vertex(...points[6]);
+    vertex(...points[7]);
+    vertex(...points[3]);
     endShape(CLOSE);
     stroke(0);
     strokeWeight(1);
-    fill((255,0,0))
     for (const edge of edgesToDraw) {
         line(...edge[0], ...edge[1]);
     }
