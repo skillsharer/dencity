@@ -6,14 +6,14 @@ const intersectBorder = gridSize*20;
 const mapBorder = gridSize*2;
 const roadBorder = gridSize;
 const intersectionDensity = 0.5;
-const minBuildingSize = 20;
-const maxBuildingSize = minBuildingSize*16;
+const minBuildingSize = gridSize*4;
+const maxBuildingSize = minBuildingSize*5;
 const minBuildingHeight = 150;
 const maxBuildingHeight = 200;
 const debug = false;
 const maxDisplacement = 0.5;
-const buildingFrameHeight = 5; // Adjust for desired frame thickness
-const buildingFrameInset = 3;  // Adjust for how much you want the frame to be inset
+const buildingFrameHeight = 7;
+const buildingFrameInset = 2;
 
 class Cell {
     constructor(x, y) {
@@ -595,13 +595,14 @@ class Building {
       return color(...colorValue);
     }
     
-    setWindowSize(){
-      this.windowSizeX = this.width / random(1,15);
-      this.windowSizeY = this.height / random(1,15);
-      this.windowSizeZ = this.depth / random(1,15);
-      this.gapSizeX = this.windowSizeX / random(1,10);
-      this.gapSizeY = this.windowSizeY / random(1,10);
-      this.gapSizeZ = this.windowSizeZ /random(1,10);
+    setBoxWindowSize(boxWidth, boxHeight, boxDepth){
+      let windowSizeX = boxWidth / random(1,10);
+      let windowSizeY = boxHeight / random(1,10);
+      let windowSizeZ = boxDepth / random(1,10);
+      let gapSizeX = windowSizeX / random(1,10);
+      let gapSizeY = windowSizeY / random(1,10);
+      let gapSizeZ = windowSizeZ / random(1,10);
+      return [windowSizeX, windowSizeY, windowSizeZ, gapSizeX, gapSizeY, gapSizeZ];
     }
   
    check_quarter() {
@@ -649,18 +650,32 @@ class Building {
     }
   
     defineBox(){
-      fill(this.buildingColor);
-      box(this.width, this.height, this.depth);
-      if (random() <= 0.5){
-        drawHandDrawnBox(this.width, this.height + buildingFrameHeight, this.depth, maxDisplacement);
+      let xc = this.x + this.width / 2;
+      let yc = this.y + this.depth / 2;
+      let currentHeight;
+      translate(xc, yc, this.height / 2);
+      rotateX(HALF_PI);
+      if (random() <= 0.9){
+        push();
+        translate(0, buildingFrameHeight/2, 0);
+        drawHandDrawnBoxWithoutTop(this.width, this.height + buildingFrameHeight, this.depth, maxDisplacement);
+        pop();
         drawTopFrame(this.height, this.width, this.depth, this.buildingColor);
+        currentHeight = this.height + buildingFrameHeight;
       } else {
         drawHandDrawnBox(this.width, this.height, this.depth, maxDisplacement);
+        currentHeight = this.height;
       }
-      drawWindows(this);
+      fill(this.buildingColor);
+      box(this.width, this.height, this.depth);
+      drawWindows(this, this.width, currentHeight, this.depth);
     }
 
     defineCylinder(){
+      let xc = this.x + this.width / 2;
+      let yc = this.y + this.depth / 2;
+      translate(xc, yc, this.height / 2);
+      rotateX(HALF_PI);
       const radius = this.width / 2;
       fill(this.buildingColor);
       cylinder(radius, this.height);
@@ -685,12 +700,7 @@ class Building {
     }
 
     drawBuilding(){
-      push();
-      let xc = this.x + this.width / 2;
-      let yc = this.y + this.depth / 2;
-      translate(xc, yc, this.height / 2);
-      // Draw comes here
-      rotateX(HALF_PI);      
+      push();    
       switch(this.shape){
         case 'rectangle':
           this.defineBox();
@@ -760,27 +770,34 @@ function drawCylinderWindows(building) {
     pop();
 }
 
-function drawWindows(building) {
+function drawWindows(building, boxWidth, boxHeight, boxDepth) {
     const quarter = building.quarter;
+    const windowProperties = building.setBoxWindowSize(boxWidth, boxHeight, boxDepth);
+    const windowSizeX = windowProperties[0];
+    const windowSizeY = windowProperties[1];
+    const windowSizeZ = windowProperties[2];
+    const gapSizeX = windowProperties[3];
+    const gapSizeY = windowProperties[4];
+    const gapSizeZ = windowProperties[5];
 
-    const actualWindowSizeX = building.windowSizeX - building.gapSizeX;
-    const actualWindowSizeY = building.windowSizeY - building.gapSizeY;
-    const actualWindowSizeZ = building.windowSizeZ - building.gapSizeZ;
+    const actualWindowSizeX = windowSizeX - gapSizeX;
+    const actualWindowSizeY = windowSizeY - gapSizeY;
+    const actualWindowSizeZ = windowSizeZ - gapSizeZ;
 
-    fill(100, 100, 250, 150);
+    fill(188, 180, 180);
     stroke(0);
 
-    const numWindowsX = Math.floor(building.width / building.windowSizeX);
-    const numWindowsY = Math.floor(building.height / building.windowSizeY);
-    const numWindowsZ = Math.floor(building.depth / building.windowSizeZ);
+    const numWindowsX = Math.floor(boxWidth/windowSizeX);
+    const numWindowsY = Math.floor(boxHeight/windowSizeY);
+    const numWindowsZ = Math.floor(boxDepth/windowSizeZ);
 
-    const halfWidth = -building.width / 2;
-    const halfHeight = -building.height / 2;
-    const halfDepth = -building.depth / 2;
+    const halfWidth = -boxWidth/2;
+    const halfHeight = -boxHeight/4;
+    const halfDepth = -boxDepth/2;
   
-    const halfGapSizeX = building.gapSizeX/2;
-    const halfGapSizeY = building.gapSizeY/2;
-    const halfGapSizeZ = building.gapSizeZ/2;
+    const halfGapSizeX = gapSizeX/2;
+    const halfGapSizeY = gapSizeY/2;
+    const halfGapSizeZ = gapSizeZ/2;
 
     const displacedVertex = (x, y, z = undefined, displacements) => { 
         if (z === undefined) {
@@ -791,9 +808,24 @@ function drawWindows(building) {
     };
 
     const calculateVertices = (i, j, face) => {
-        const ix = halfWidth + i * building.windowSizeX + halfGapSizeX;
-        const jy = j * building.windowSizeY + halfGapSizeY;
-        const iz = halfDepth + i * building.windowSizeZ + halfGapSizeZ;
+        // Calculate the total window space including gaps for width, height, and depth
+        const totalWindowWidth = numWindowsX * windowSizeX;
+        const totalWindowHeight = numWindowsY * windowSizeY;
+        const totalWindowDepth = numWindowsZ * windowSizeZ;
+
+        // Calculate the remaining space after placing the windows
+        const remainingWidth = boxWidth - totalWindowWidth;
+        const remainingHeight = boxHeight - totalWindowHeight;
+        const remainingDepth = boxDepth - totalWindowDepth;
+
+        // Calculate the offsets to center the windows
+        const offsetX = remainingWidth / 2;
+        const offsetY = remainingHeight / 2; 
+        const offsetZ = remainingDepth / 2;
+
+        const ix = halfWidth + offsetX + i * windowSizeX + halfGapSizeX; // Adjusted starting position for x
+        const jy = halfHeight + offsetY + j * windowSizeY + halfGapSizeY; // Adjusted starting position for y
+        const iz = halfDepth + offsetZ + i * windowSizeZ + halfGapSizeZ; // Adjusted starting position for z
 
         const displacements = Array.from({ length: 4 }, () => [
             random(-maxDisplacement, maxDisplacement),
@@ -814,10 +846,10 @@ function drawWindows(building) {
             case 'right':
                 return displacements.map((d, idx) => {
                     const base = [
-                        [building.width / 2, jy, iz],
-                        [building.width / 2, jy + actualWindowSizeY, iz],
-                        [building.width / 2, jy + actualWindowSizeY, iz + actualWindowSizeZ],
-                        [building.width / 2, jy, iz + actualWindowSizeZ]
+                        [boxWidth / 2, jy, iz],
+                        [boxWidth / 2, jy + actualWindowSizeY, iz],
+                        [boxWidth / 2, jy + actualWindowSizeY, iz + actualWindowSizeZ],
+                        [boxWidth / 2, jy, iz + actualWindowSizeZ]
                     ];
                     return [base[idx][0] + d[0], base[idx][1] + d[1], base[idx][2]];
                 });
@@ -915,9 +947,9 @@ function drawTopFrame(boxHeight, boxWidth, boxDepth, buildingColor) {
   // Front and Back horizontal frame bars
   fill(buildingColor);
   push();
-  translate(0, boxHeight/2 + buildingFrameHeight, boxDepth/2 - buildingFrameInset/2);
+  translate(0, boxHeight/2 + buildingFrameHeight/2, boxDepth/2 - buildingFrameInset/2);
   box(boxWidth, buildingFrameHeight, buildingFrameInset);
-  drawHandDrawnFrame(boxWidth, buildingFrameHeight, buildingFrameInset, maxDisplacement, PI);
+  drawHandDrawnFrame(boxWidth, buildingFrameHeight/2, buildingFrameInset, maxDisplacement, PI);
   translate(0, 0, -boxDepth + buildingFrameInset);
   box(boxWidth, buildingFrameHeight, buildingFrameInset);
   drawHandDrawnFrame(boxWidth, buildingFrameHeight, buildingFrameInset, maxDisplacement);
@@ -925,7 +957,7 @@ function drawTopFrame(boxHeight, boxWidth, boxDepth, buildingColor) {
 
   // Left and Right horizontal frame bars
   push();
-  translate(-boxWidth/2 + buildingFrameInset/2, boxHeight/2 + buildingFrameHeight, 0);
+  translate(-boxWidth/2 + buildingFrameInset/2, boxHeight/2 + buildingFrameHeight/2, 0);
   box(buildingFrameInset, buildingFrameHeight, boxDepth - 2 * buildingFrameInset);
   drawHandDrawnFrame(boxDepth, buildingFrameHeight, buildingFrameInset, maxDisplacement, HALF_PI);
   translate(boxWidth - buildingFrameInset, 0, 0);
@@ -955,7 +987,7 @@ function drawHandDrawnFrame(boxWidth, boxHeight, boxDepth, maxDisplacement, rota
     ];
     push();
     rotateY(rotation);
-    translate(0, 1, 0);  // Add the slight Z offset here
+    translate(0, 2, 0);  // Add the slight Z offset here
     fill((247,236,215)); // Fill with white
     // Draw the trapezoid
     beginShape();
@@ -970,6 +1002,43 @@ function drawHandDrawnFrame(boxWidth, boxHeight, boxDepth, maxDisplacement, rota
         line(...edge[0], ...edge[1]);
     }
     pop();
+}
+
+function drawHandDrawnBoxWithoutTop(boxWidth, boxHeight, boxDepth, maxDisplacement) {
+    const disp = () => random(-maxDisplacement, maxDisplacement);
+    const points = [
+        [-boxWidth/2, -boxHeight/2, boxDepth/2],
+        [boxWidth/2, -boxHeight/2, boxDepth/2],
+        [boxWidth/2, boxHeight/2, boxDepth/2],
+        [-boxWidth/2, boxHeight/2, boxDepth/2],
+        [-boxWidth/2, -boxHeight/2, -boxDepth/2],
+        [boxWidth/2, -boxHeight/2, -boxDepth/2],
+        [boxWidth/2, boxHeight/2, -boxDepth/2],
+        [-boxWidth/2, boxHeight/2, -boxDepth/2]
+    ].map(pt => pt.map(val => val + disp()));
+  
+      const edgesToDraw = [
+        [points[0], points[1]],
+        [points[1], points[2]],
+        //[points[2], points[3]],
+        [points[3], points[0]],
+        [points[4], points[5]],
+        [points[5], points[6]],
+        //[points[6], points[7]],
+        [points[7], points[4]],
+        [points[0], points[4]],
+        [points[1], points[5]],
+        //[points[2], points[6]],
+        //[points[3], points[7]]
+    ];
+    push();
+    stroke(0);
+    strokeWeight(1);
+    for (const edge of edgesToDraw) {
+        line(...edge[0], ...edge[1]);
+    }
+    pop();
+  
 }
 
 function drawHandDrawnBox(boxWidth, boxHeight, boxDepth, maxDisplacement) {
@@ -1076,7 +1145,7 @@ function defineBuildings(grid) {
 }
 
 function draw() {
-  background(243,237,229);
+  background(100,100,100);
   translate(-canvasWidth / 2, -canvasHeight / 2, 0);  // move origin to top-left corner
   if (debug){
     blendMode(DIFFERENCE);
