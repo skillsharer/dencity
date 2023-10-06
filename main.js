@@ -9,7 +9,7 @@ const intersectionDensity = 0.5;
 const minBuildingSize = gridSize*5;
 const maxBuildingSize = minBuildingSize*5;
 const minBuildingHeight = 150;
-const maxBuildingHeight = 200;
+const maxBuildingHeight = 300;
 const debug = false;
 const maxDisplacement = 0.5;
 const buildingFrameHeight = 7;
@@ -682,7 +682,7 @@ class Building {
       drawHandDrawnCylinder(radius, this.height, 20, maxDisplacement);
     }
 
-    defineSetBack(setbacks = [1, 0.8]){
+    defineSetBack(setbacks = [1, 0.6]){
       push();
       let xc = this.x + this.width / 2;
       let yc = this.y + this.depth / 2;
@@ -691,18 +691,15 @@ class Building {
       let yOffset = -this.height / 4;
       for (let i = 0; i < setbacks.length; i++) {
         const upSize = setbacks[i];
-        translate(0, yOffset, 0);
         const currentWidth = this.width * upSize;
         const currentHeight = this.height / setbacks.length; // Split height among levels
         const currentDepth = this.depth * upSize;
-        push();
-        //translate(0, (i+1) * buildingFrameHeight/2, 0);
+        translate(0, yOffset, 0);
         drawHandDrawnBoxWithoutTop(currentWidth, currentHeight + buildingFrameHeight, currentDepth, maxDisplacement);
-        pop();
+        drawTopFrame(currentHeight, currentWidth, currentDepth, this.buildingColor);
         fill(this.buildingColor);
         box(currentWidth, currentHeight, currentDepth);
         drawWindows(this, currentWidth, currentHeight, currentDepth);
-        drawHandDrawnBox(currentWidth, currentHeight, currentDepth, maxDisplacement);
         yOffset = currentHeight; 
       }
       pop();
@@ -874,10 +871,10 @@ function drawWindows(building, boxWidth, boxHeight, boxDepth) {
             case 'back':
                 return displacements.map((d, idx) => {
                     const base = [
-                        [ix, jy, building.depth/2],
-                        [ix + actualWindowSizeX, jy, building.depth/2],
-                        [ix + actualWindowSizeX, jy + actualWindowSizeY, building.depth/2],
-                        [ix, jy + actualWindowSizeY, building.depth/2]
+                        [ix, jy, boxDepth/2],
+                        [ix + actualWindowSizeX, jy, boxDepth/2],
+                        [ix + actualWindowSizeX, jy + actualWindowSizeY, boxDepth/2],
+                        [ix, jy + actualWindowSizeY, boxDepth/2]
                     ];
                     return [base[idx][0] + d[0], base[idx][1] + d[1], base[idx][2]];
                 });
