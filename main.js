@@ -6,7 +6,7 @@ const intersectBorder = gridSize*20;
 const mapBorder = gridSize*2;
 const roadBorder = gridSize;
 const intersectionDensity = 0.5;
-const minBuildingSize = gridSize*4;
+const minBuildingSize = gridSize*5;
 const maxBuildingSize = minBuildingSize*5;
 const minBuildingHeight = 150;
 const maxBuildingHeight = 200;
@@ -682,8 +682,12 @@ class Building {
       drawHandDrawnCylinder(radius, this.height, 20, maxDisplacement);
     }
 
-    defineSetBack(setbacks = [1, 0.9]){
+    defineSetBack(setbacks = [1, 0.8]){
       push();
+      let xc = this.x + this.width / 2;
+      let yc = this.y + this.depth / 2;
+      translate(xc, yc, this.height / 2);
+      rotateX(HALF_PI);
       let yOffset = -this.height / 4;
       for (let i = 0; i < setbacks.length; i++) {
         const upSize = setbacks[i];
@@ -691,8 +695,13 @@ class Building {
         const currentWidth = this.width * upSize;
         const currentHeight = this.height / setbacks.length; // Split height among levels
         const currentDepth = this.depth * upSize;
+        push();
+        //translate(0, (i+1) * buildingFrameHeight/2, 0);
+        drawHandDrawnBoxWithoutTop(currentWidth, currentHeight + buildingFrameHeight, currentDepth, maxDisplacement);
+        pop();
         fill(this.buildingColor);
         box(currentWidth, currentHeight, currentDepth);
+        drawWindows(this, currentWidth, currentHeight, currentDepth);
         drawHandDrawnBox(currentWidth, currentHeight, currentDepth, maxDisplacement);
         yOffset = currentHeight; 
       }
@@ -729,7 +738,6 @@ function drawCylinderWindows(building) {
     // Calculate number of windows based on available space and window size
     let numWindowsAround = Math.floor(circumference / building.windowSizeX);
     let numWindowsVertical = Math.floor(building.height / building.windowSizeY);
-    //console.log(numWindowsAround);
 
     // Calculate the angular distance between windows
     let angleBetweenWindows = TWO_PI / numWindowsAround;
