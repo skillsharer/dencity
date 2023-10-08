@@ -89,7 +89,7 @@ function getDate(){
 function setup() {
   pixelDensity(1); // ensures one unit in the canvas corresponds to one pixel
   createCanvas(canvasWidth, canvasHeight, WEBGL);
-  //camera(0, 1000, -height / tan(-PI*60.0 / 180.0), 0, 0, 0, 0, 1, -1);
+  camera(0, 1000, -height / tan(-PI*60.0 / 180.0), 0, 0, 0, 0, 1, -1);
   noLoop();
 }
 
@@ -139,7 +139,7 @@ function populateIntersections(grid, intersections){
           intersections.push(intersection);
           grid[i][j] = intersection; 
           if (debug){
-             // Draw a point at this position
+            // Draw a point at this position
             stroke(0, 0, 0); // Color of the border (black)
             strokeWeight(7); // Width of the border
             point(i, j);
@@ -660,7 +660,7 @@ class Building {
         translate(0, buildingFrameHeight/2, 0);
         drawHandDrawnBoxWithoutTop(this.width, this.height + buildingFrameHeight, this.depth, maxDisplacement);
         pop();
-        drawTopFrame(this.height, this.width, this.depth, this.buildingColor);
+        drawTopFrame(this.width, this.height, this.depth, this.buildingColor);
         currentHeight = this.height + buildingFrameHeight;
       } else {
         drawHandDrawnBox(this.width, this.height, this.depth, maxDisplacement);
@@ -688,19 +688,21 @@ class Building {
       let yc = this.y + this.depth / 2;
       translate(xc, yc, this.height / 2);
       rotateX(HALF_PI);
-      let yOffset = -this.height / 4;
+      let yOffset = -this.height / 2;
       for (let i = 0; i < setbacks.length; i++) {
         const upSize = setbacks[i];
         const currentWidth = this.width * upSize;
         const currentHeight = this.height / setbacks.length; // Split height among levels
         const currentDepth = this.depth * upSize;
         translate(0, yOffset, 0);
-        drawHandDrawnBoxWithoutTop(currentWidth, currentHeight + buildingFrameHeight, currentDepth, maxDisplacement);
-        drawTopFrame(currentHeight, currentWidth, currentDepth, this.buildingColor);
+        drawHandDrawnBoxWithoutTop(currentWidth, currentHeight + 2*buildingFrameHeight, currentDepth, maxDisplacement);
+        
+        drawTopFrame(currentWidth, currentHeight, currentDepth, this.buildingColor);
         fill(this.buildingColor);
         box(currentWidth, currentHeight, currentDepth);
         drawWindows(this, currentWidth, currentHeight, currentDepth);
-        yOffset = currentHeight; 
+        
+        yOffset = currentHeight + buildingFrameHeight; 
       }
       pop();
     }
@@ -776,6 +778,7 @@ function drawCylinderWindows(building) {
 }
 
 function drawWindows(building, boxWidth, boxHeight, boxDepth) {
+    push();
     const quarter = building.quarter;
     const windowProperties = building.setBoxWindowSize(boxWidth, boxHeight, boxDepth);
     const windowSizeX = windowProperties[0];
@@ -788,9 +791,6 @@ function drawWindows(building, boxWidth, boxHeight, boxDepth) {
     const actualWindowSizeX = windowSizeX - gapSizeX;
     const actualWindowSizeY = windowSizeY - gapSizeY;
     const actualWindowSizeZ = windowSizeZ - gapSizeZ;
-
-    fill(188, 180, 180);
-    stroke(0);
 
     const numWindowsX = Math.floor(boxWidth/windowSizeX);
     const numWindowsY = Math.floor(boxHeight/windowSizeY);
@@ -894,11 +894,15 @@ function drawWindows(building, boxWidth, boxHeight, boxDepth) {
         }
         pop();
     };
+  
+    fill(188, 180, 180);
+    stroke(0);
 
     if ([0, 1].includes(quarter)) drawFaceWindows('front', numWindowsX, numWindowsY, 0, halfHeight, halfDepth - 1);
     if ([0, 2].includes(quarter)) drawFaceWindows('right', numWindowsZ, numWindowsY, 1, halfHeight, 0);
     if ([1, 3].includes(quarter)) drawFaceWindows('left', numWindowsZ, numWindowsY, -1, halfHeight, 0);
     if ([2, 3].includes(quarter)) drawFaceWindows('back', numWindowsX, numWindowsY, 0, halfHeight, 1);
+  pop();
 }
 
 function drawHandDrawnCylinder(radius, height, segments, maxDisplacement, horizontalLines = 5) {
@@ -948,7 +952,7 @@ function drawHandDrawnCylinder(radius, height, segments, maxDisplacement, horizo
     }
 }
 
-function drawTopFrame(boxHeight, boxWidth, boxDepth, buildingColor) {
+function drawTopFrame(boxWidth, boxHeight, boxDepth, buildingColor) {
   // Front and Back horizontal frame bars
   fill(buildingColor);
   push();
