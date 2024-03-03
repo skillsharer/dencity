@@ -11,12 +11,12 @@ class CylinderBuilding extends Building{
   
   draw_building(){
    push();
-   noStroke();
-   translate(this.cx, this.cy, this.cz);
-   rotateX(HALF_PI);
-   fill(this.building_color);
-   cylinder(this.radius, this.z_length);
-   this.draw_windows();
+    noStroke();
+    translate(this.cx, this.cy, this.cz);
+    rotateX(HALF_PI);
+    fill(this.building_color);
+    cylinder(this.radius, this.z_length);
+    this.draw_windows();
    pop();
   }
   

@@ -16,9 +16,9 @@ calculate_windows() {
 
   // Calculate number of windows randomly for each axis
   const window_nums = {
-    x: Math.floor(random(1,10)),
-    y: Math.floor(random(1,10)),
-    z: Math.floor(random(1,20))
+    x: Math.floor($fx.rand() * 10),
+    y: Math.floor($fx.rand() * 10),
+    z: Math.floor($fx.rand() * 20)
   };
 
   // Calculate window segment sizes for each axis
@@ -30,9 +30,9 @@ calculate_windows() {
 
   // Calculate window gaps for each axis
   const window_gaps = {
-    x: window_segments.x * random(0.2,1),
-    y: window_segments.y * random(0.2,1),
-    z: window_segments.z * random(0.2,1)
+    x: window_segments.x * $fx.rand(),
+    y: window_segments.y * $fx.rand(),
+    z: window_segments.z * $fx.rand()
   };
 
   // Calculate window lengths for each axis
@@ -143,14 +143,19 @@ calculate_windows() {
   
   draw_building(){
     push();
-    noStroke();
-    translate(this.cx, this.cy, this.cz);
-    fill(this.building_color);
-    box(this.x_length, this.y_length, this.z_length);
+      push();
+      noStroke();
+      translate(this.cx, this.cy, this.cz);
+      fill(this.building_color);
+      box(this.x_length, this.y_length, this.z_length);
+      pop();
+      if (this.top_frame) {
+        this.draw_top_frame();
+        translate(0,0,this.frame_thickness/2);
+      }
+      this.draw_edges();
+      this.windows = this.calculate_windows();
+      this.draw_windows();
     pop();
-    if (this.top_frame) this.draw_top_frame();
-    this.draw_edges();
-    this.windows = this.calculate_windows();
-    this.draw_windows();
   }
 }

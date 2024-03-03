@@ -19,8 +19,10 @@ class SetBackBuilding extends BoxBuilding{
   }
   
   draw_building(){
-    for(let i = 0; i < this.set_backs.length; i++){
-      this.set_backs[i].draw_building();
-    } 
+    push();
+      for(let i = 0; i < this.set_backs.length; i++){
+        this.set_backs[i].draw_building();
+      }
+    pop();
   }  
 }

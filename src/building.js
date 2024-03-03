@@ -26,7 +26,7 @@ class Building{
     }
 
     calc_displacement(){
-      return random(-this.max_displacement, this.max_displacement);
+      return Math.floor($fx.rand()* (this.max_displacement + this.max_displacement - 1)) + this.max_displacement;
     }
   
     draw_edges(x=this.x_length, y=this.y_length, z=this.z_length) {

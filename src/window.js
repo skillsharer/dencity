@@ -8,13 +8,14 @@ class Window{
     this.d = d;
     this.bg_color = bg_color;
     this.position = position;
-    this.max_displacement = max_displacement
+    this.max_displacement = max_displacement;
+    //console.log(this.max_displacement);
     this.rolls = rolls;
     this.roll_color = roll_color;
   }
   
   randomDisplacement(){
-    return random(-this.max_displacement, this.max_displacement);
+    return Math.floor($fx.rand() * (this.max_displacement + this.max_displacement + 1)) + this.max_displacement;
   }
   
   draw_rolls(){
@@ -32,7 +33,7 @@ class Window{
     }
     
     push();
-    let roll_height = Math.floor(random(0,this.h));
+    let roll_height = Math.floor($fx.rand() * this.h);
       drawRoll(this.w/2, roll_position, roll_height - this.h/2, -this.w/2, roll_position, roll_height - this.h/2, 2);
       translate(0, roll_position, roll_height - this.h/2 - roll_height/2);
       rotateX(HALF_PI);

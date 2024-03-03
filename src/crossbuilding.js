@@ -10,9 +10,9 @@ class CrossBuilding extends BoxBuilding{
 
     // Calculate number of windows randomly for each axis
     const window_nums = {
-      x: Math.floor(random(1,5)),
-      y: Math.floor(random(1,5)),
-      z: Math.floor(random(1,20))
+      x: Math.floor($fx.rand() * (5 - 1 + 1)) + 1,
+      y: Math.floor($fx.rand() * (5 - 1 + 1)) + 1,
+      z: Math.floor($fx.rand() * (20 - 1 + 1)) + 1
     };
 
     // Calculate window segment sizes for each axis
@@ -24,9 +24,9 @@ class CrossBuilding extends BoxBuilding{
 
     // Calculate window gaps for each axis
     const window_gaps = {
-      x: window_segments.x * random(0,0.3),
-      y: window_segments.y * random(0,0.3),
-      z: window_segments.z * random(0,0.3)
+      x: window_segments.x * $fx.rand(),
+      y: window_segments.y * $fx.rand(),
+      z: window_segments.z * $fx.rand()
     };
 
     // Calculate window lengths for each axis
@@ -104,101 +104,99 @@ class CrossBuilding extends BoxBuilding{
   // Helper function to draw a box with colored edges
   drawFrame(x, y, z, w, h, d, side) {
     push();
-    translate(x, y, z);
-    noStroke();
-    fill(this.building_color);
-    box(w, h, d);
-    // Color the top to white
-    push();
-      translate(0, 0 , d / 2 * 1.01);
-      fill(color(200,200,200));
-      plane(w, h);
-    pop();
-    stroke(color(0,0,0));
-    strokeWeight(1);
-    
-    const halfW = w / 2 + random(-this.max_displacement, this.max_displacement);
-    const halfH = h / 2 + random(-this.max_displacement, this.max_displacement);
-    const halfD = d / 2 + random(-this.max_displacement, this.max_displacement);
-    const frameThickness = this.frame_thickness;
-    
-    switch (side) {
-      case 'front':
-        line(-halfW, -halfH + frameThickness, halfD, halfW, -halfH + frameThickness, halfD);
-        line(-halfW + frameThickness, -halfH, halfD, halfW - frameThickness, -halfH , halfD);
-        line(-halfW + frameThickness, -halfH, -halfD, halfW - frameThickness, -halfH , -halfD);
-        break;
-      case 'right':
-        line(halfW, -halfH, halfD, halfW, halfH, halfD);
-        line(-halfW, -halfH + frameThickness, halfD, -halfW, halfH - frameThickness, halfD);
-        line(-halfW, -halfH + frameThickness, -halfD, -halfW, halfH - frameThickness, -halfD);
-        break;
-      case 'left':
-        line(-halfW, -halfH, halfD, -halfW, halfH, halfD);
-        line(-halfW + frameThickness, -halfH + frameThickness, -halfD, -halfW + frameThickness, halfH - frameThickness, -halfD);
-        line(-halfW + frameThickness, -halfH + frameThickness, halfD, -halfW + frameThickness, halfH - frameThickness, halfD);
-        break;
-      case 'back':
-        line(-halfW, -halfH, halfD, halfW, -halfH, halfD);
-        line(-halfW + frameThickness, halfH, halfD, halfW - frameThickness, halfH, halfD);
-        line(-halfW + frameThickness, halfH + 1, -halfD, halfW - frameThickness, halfH + 1, -halfD);
-        break;
-      case 'leftBackHorizontal':   
-        line(-halfW, -halfH, halfD, halfW, -halfH, halfD);
-        line(-halfW + frameThickness, halfH, halfD, halfW + frameThickness, halfH, halfD);
-        line(-halfW + frameThickness, halfH, -halfD, halfW + frameThickness, halfH, -halfD);
-        line(halfW + frameThickness, halfH, -halfD, halfW + frameThickness, halfH, halfD);
-        line(-halfW + frameThickness, halfH, -halfD, -halfW + frameThickness, halfH, halfD);
-        break;
-      case 'rightBackHorizontal':
-        line(-halfW, -halfH, halfD, halfW, -halfH, halfD);
-        line(-halfW - frameThickness, halfH, halfD, halfW - frameThickness, halfH, halfD);
-        line(-halfW - frameThickness, halfH, -halfD, halfW - frameThickness, halfH, -halfD);
-        line(halfW - frameThickness, halfH, -halfD, halfW - frameThickness, halfH, halfD);
-        line(-halfW - frameThickness, halfH, -halfD, -halfW - frameThickness, halfH, halfD);
-        break;
-      case 'leftFrontHorizontal':
-        line(-halfW, halfH, halfD, halfW, halfH, halfD);
-        line(-halfW + frameThickness, -halfH, halfD, halfW + frameThickness, -halfH, halfD);
-        line(-halfW + frameThickness, -halfH, -halfD, halfW + frameThickness, -halfH, -halfD);
-        line(halfW + frameThickness, -halfH, -halfD, halfW + frameThickness, -halfH, halfD);
-        line(-halfW + frameThickness, -halfH, -halfD, -halfW + frameThickness, -halfH, halfD);
-        break;
-      case 'rightFrontHorizontal':
-        line(-halfW, halfH, halfD, halfW, halfH, halfD);
-        line(-halfW - frameThickness, -halfH, halfD, halfW - frameThickness, -halfH, halfD);
-        line(-halfW - frameThickness, -halfH, -halfD, halfW - frameThickness, -halfH, -halfD);
-        line(halfW - frameThickness, -halfH, -halfD, halfW - frameThickness, -halfH, halfD);
-        line(-halfW - frameThickness, -halfH, -halfD, -halfW - frameThickness, -halfH, halfD);
-        break;
-      case 'leftBackVertical':
-        line(-halfW, -halfH - frameThickness, halfD, -halfW, halfH - frameThickness, halfD);
-        line(halfW, -halfH, halfD, halfW, halfH, halfD);
-        line(halfW, -halfH, -halfD, halfW, halfH, -halfD);
-        line(halfW, -halfH, -halfD, halfW, -halfH, halfD);
-        break;
-      case 'rightBackVertical':
-        line(-halfW, -halfH, halfD, -halfW, halfH, halfD);
-        line(halfW, -halfH - frameThickness, halfD, halfW, halfH - frameThickness, halfD);
-        line(-halfW, -halfH, -halfD, -halfW, halfH, -halfD);
-        line(-halfW, -halfH, -halfD, -halfW, -halfH, halfD);
-
-        break;
-      case 'leftFrontVertical':
-        line(-halfW, -halfH + frameThickness, halfD, -halfW, halfH + frameThickness, halfD);
-        line(halfW, -halfH, halfD, halfW, halfH, halfD);
-        line(halfW, -halfH, -halfD, halfW, halfH, -halfD);
-        line(halfW, -halfH, -halfD, halfW, -halfH, halfD);
-        break;
-      case 'rightFrontVertical':
-        line(-halfW, -halfH, halfD, -halfW, halfH, halfD);
-        line(halfW, -halfH + frameThickness, halfD, halfW, halfH + frameThickness, halfD);
-        line(-halfW, -halfH, -halfD, -halfW, halfH, -halfD);
-        line(-halfW, -halfH, -halfD, -halfW, -halfH, halfD);
-        break;
-      default:
-        break;
-    }
+      translate(x, y, z);
+      noStroke();
+      fill(this.building_color);
+      box(w, h, d);
+      // Color the top to white
+      push();
+        translate(0, 0 , d / 2 * 1.02);
+        fill(color(200,200,200));
+        plane(w, h);
+      pop();
+      stroke(color(0,0,0));
+      strokeWeight(1);
+      const halfW = w / 2 + $fx.rand() * this.max_displacement;
+      const halfH = h / 2 + $fx.rand() * this.max_displacement;
+      const halfD = d / 2 + $fx.rand() * this.max_displacement;
+      const frameThickness = this.frame_thickness;
+      translate(0, 0 , d / 2);
+      switch (side) {
+        case 'front':
+          line(-halfW, -halfH + frameThickness, halfD, halfW, -halfH + frameThickness, halfD);
+          line(-halfW + frameThickness, -halfH, halfD, halfW - frameThickness, -halfH , halfD);
+          line(-halfW + frameThickness, -halfH, -halfD, halfW - frameThickness, -halfH , -halfD);
+          break;
+        case 'right':
+          line(halfW, -halfH, halfD, halfW, halfH, halfD);
+          line(-halfW, -halfH + frameThickness, halfD, -halfW, halfH - frameThickness, halfD);
+          line(-halfW, -halfH + frameThickness, -halfD, -halfW, halfH - frameThickness, -halfD);
+          break;
+        case 'left':
+          line(-halfW, -halfH, halfD, -halfW, halfH, halfD);
+          line(-halfW + frameThickness, -halfH + frameThickness, -halfD, -halfW + frameThickness, halfH - frameThickness, -halfD);
+          line(-halfW + frameThickness, -halfH + frameThickness, halfD, -halfW + frameThickness, halfH - frameThickness, halfD);
+          break;
+        case 'back':
+          line(-halfW, -halfH, halfD, halfW, -halfH, halfD);
+          line(-halfW + frameThickness, halfH, halfD, halfW - frameThickness, halfH, halfD);
+          line(-halfW + frameThickness, halfH + 1, -halfD, halfW - frameThickness, halfH + 1, -halfD);
+          break;
+        case 'leftBackHorizontal':   
+          line(-halfW, -halfH, halfD, halfW, -halfH, halfD);
+          line(-halfW + frameThickness, halfH, halfD, halfW + frameThickness, halfH, halfD);
+          line(-halfW + frameThickness, halfH, -halfD, halfW + frameThickness, halfH, -halfD);
+          line(halfW + frameThickness, halfH, -halfD, halfW + frameThickness, halfH, halfD);
+          line(-halfW + frameThickness, halfH, -halfD, -halfW + frameThickness, halfH, halfD);
+          break;
+        case 'rightBackHorizontal':
+          line(-halfW, -halfH, halfD, halfW, -halfH, halfD);
+          line(-halfW - frameThickness, halfH, halfD, halfW - frameThickness, halfH, halfD);
+          line(-halfW - frameThickness, halfH, -halfD, halfW - frameThickness, halfH, -halfD);
+          line(halfW - frameThickness, halfH, -halfD, halfW - frameThickness, halfH, halfD);
+          line(-halfW - frameThickness, halfH, -halfD, -halfW - frameThickness, halfH, halfD);
+          break;
+        case 'leftFrontHorizontal':
+          line(-halfW, halfH, halfD, halfW, halfH, halfD);
+          line(-halfW + frameThickness, -halfH, halfD, halfW + frameThickness, -halfH, halfD);
+          line(-halfW + frameThickness, -halfH, -halfD, halfW + frameThickness, -halfH, -halfD);
+          line(halfW + frameThickness, -halfH, -halfD, halfW + frameThickness, -halfH, halfD);
+          line(-halfW + frameThickness, -halfH, -halfD, -halfW + frameThickness, -halfH, halfD);
+          break;
+        case 'rightFrontHorizontal':
+          line(-halfW, halfH, halfD, halfW, halfH, halfD);
+          line(-halfW - frameThickness, -halfH, halfD, halfW - frameThickness, -halfH, halfD);
+          line(-halfW - frameThickness, -halfH, -halfD, halfW - frameThickness, -halfH, -halfD);
+          line(halfW - frameThickness, -halfH, -halfD, halfW - frameThickness, -halfH, halfD);
+          line(-halfW - frameThickness, -halfH, -halfD, -halfW - frameThickness, -halfH, halfD);
+          break;
+        case 'leftBackVertical':
+          line(-halfW, -halfH - frameThickness, halfD, -halfW, halfH - frameThickness, halfD);
+          line(halfW, -halfH, halfD, halfW, halfH, halfD);
+          line(halfW, -halfH, -halfD, halfW, halfH, -halfD);
+          line(halfW, -halfH, -halfD, halfW, -halfH, halfD);
+          break;
+        case 'rightBackVertical':
+          line(-halfW, -halfH, halfD, -halfW, halfH, halfD);
+          line(halfW, -halfH - frameThickness, halfD, halfW, halfH - frameThickness, halfD);
+          line(-halfW, -halfH, -halfD, -halfW, halfH, -halfD);
+          line(-halfW, -halfH, -halfD, -halfW, -halfH, halfD);
+          break;
+        case 'leftFrontVertical':
+          line(-halfW, -halfH + frameThickness, halfD, -halfW, halfH + frameThickness, halfD);
+          line(halfW, -halfH, halfD, halfW, halfH, halfD);
+          line(halfW, -halfH, -halfD, halfW, halfH, -halfD);
+          line(halfW, -halfH, -halfD, halfW, -halfH, halfD);
+          break;
+        case 'rightFrontVertical':
+          line(-halfW, -halfH, halfD, -halfW, halfH, halfD);
+          line(halfW, -halfH + frameThickness, halfD, halfW, halfH + frameThickness, halfD);
+          line(-halfW, -halfH, -halfD, -halfW, halfH, -halfD);
+          line(-halfW, -halfH, -halfD, -halfW, -halfH, halfD);
+          break;
+        default:
+          break;
+      }
     pop();
   }
 
@@ -221,8 +219,9 @@ class CrossBuilding extends BoxBuilding{
     this.drawOuterFrames(halfXLength, halfYLength, halfZLength, halfFrameThickness, crossXLength, crossYLength);
     // Inner front and back frames
     this.drawInnerFrames(halfXLength, halfYLength, halfZLength, quarterXLength, quarterYLength, halfCrossXLength, halfCrossYLength, halfFrameThickness, halfquarterXLength, halfquarterYLength);
-    this.z_length = this.z_length + this.frame_thickness;
     pop();
+    this.z_length = this.z_length + this.frame_thickness;
+    this.cz = this.cz + this.frame_thickness / 2;
   }
 
   drawOuterFrames(halfXLength, halfYLength, halfZLength, halfFrameThickness, crossXLength, crossYLength) {
@@ -249,7 +248,7 @@ class CrossBuilding extends BoxBuilding{
   }
   
   draw_edges(x=this.x_length, y=this.y_length, z=this.z_length) {
-    const disp = () => random(-this.max_displacement, this.max_displacement);
+    const disp = () => Math.floor($fx.rand() * (this.max_displacement + this.max_displacement + 1)) + this.max_displacement;
     const half_x = Math.ceil(x / 2);
     const half_y = Math.ceil(y / 2);
     const half_z = Math.ceil(z / 2);
@@ -297,8 +296,8 @@ class CrossBuilding extends BoxBuilding{
       translate(0, 0, this.cz);
       if (this.top_frame) {
         this.draw_top_frame();
-      }
-      translate(0, 0, -this.z_length/2);
+        translate(0, 0, -this.z_length/2 + this.frame_thickness/2); // + this.frame_thickness/2
+      } 
       if (this.x_length < this.y_length){
         this.draw_edges(this.x_length*this.cross_ratio, this.y_length, this.z_length);
         this.draw_edges(this.y_length*this.cross_ratio, this.x_length, this.z_length);

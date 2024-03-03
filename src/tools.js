@@ -30,6 +30,6 @@ function randomColor(){
     [177, 144, 113],
     [237, 201, 161]
   ];
-  let colorValue = colorValues[Math.floor(random() * colorValues.length)];
+  let colorValue = colorValues[Math.floor($fx.rand() * colorValues.length)];
   return color(...colorValue);
 }
