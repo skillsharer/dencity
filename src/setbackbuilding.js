@@ -11,7 +11,7 @@ class SetBackBuilding extends BoxBuilding{
     for (let i=0; i<this.set_back_ratio.length; i++){
       let ratio_x = this.set_back_ratio[i] * this.x_length;
       let ratio_y = this.set_back_ratio[i] * this.y_length;
-      let current_height = z_segment_length / 2 + i * z_segment_length;
+      let current_height = z_segment_length * 0.5 + i * z_segment_length;
       let set_back = new BoxBuilding(this.cx, this.cy, current_height, ratio_x, ratio_y, z_segment_length, this.building_color, this.max_displacement, this.top_frame, this.frame_thickness);
       set_back_array.push(set_back);
     }
