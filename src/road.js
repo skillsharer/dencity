@@ -220,84 +220,88 @@ function countNumRoads(grid, intersection, gridSize, width, height){
 function finalizeMap(grid, intersections, width, height, gridSize, maxDisplacement) {
   intersections = intersections.filter(intersection => {
     push();
-    const x = intersection.x - gridSize;
-    const y = intersection.y - gridSize;
-    const roadsInfo = countNumRoads(grid, intersection, gridSize, width, height);
-    const numRoads = roadsInfo.numRoads;
-    const directions = roadsInfo.roads;
-    if (numRoads > 0) {
-      strokeWeight(roadBorderSize);
-      stroke(0, 0, 0); // Set stroke color for borders
-      if (!directions.includes('north')) {
-        line(x, y, x + 2 * gridSize, y); // Draw border at the north
-      }
-      if (!directions.includes('south')) {
-        line(x, y + 2 * gridSize, x + 2 * gridSize, y + 2 * gridSize); // Draw border at the south
-      }
-      if (!directions.includes('west')) {
-        line(x, y, x, y + 2 * gridSize); // Draw border at the west
-      }
-      if (!directions.includes('east')) {
-        line(x + 2 * gridSize, y, x + 2 * gridSize, y + 2 * gridSize); // Draw border at the east
-      }
-      noStroke(); // Reset stroke
-
-      // Draw crosswalks
-      if (numRoads > 2) {
-        const numOfCrossWalkLines = 4; // For each half of the road
-        const gapLength = gridSize % 2 === 0 ? Math.floor(2 * gridSize / (numOfCrossWalkLines + 1)) : Math.ceil(2 * gridSize / (numOfCrossWalkLines + 1));
-        stroke(255, 255, 255);
-        strokeWeight(dashedLineWidth);
-        for (let dir of directions) {
-          const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 2 * gridSize;
-          switch (dir) {
-            case 'north':
-              for (let i = 0; i < numOfCrossWalkLines; ++i) {
-                const dispX = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
-                const dispY = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
-                const cwStartX = (x + gapLength) + i * gapLength;
-                const cwStartY = y;
-                const cwEndX = cwStartX + dispX;
-                const cwEndY = cwStartY - Length + dispY;
-                line(cwStartX, cwStartY, cwEndX, cwEndY);
-              }
-              break;
-            case 'south':
-              for (let i = 0; i < numOfCrossWalkLines; ++i) {
-                const dispX = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
-                const dispY = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
-                const cwStartX = (x + gapLength) + i * gapLength;
-                const cwStartY = y + 2 * gridSize;
-                const cwEndX = cwStartX + dispX;
-                const cwEndY = cwStartY + Length + dispY;
-                line(cwStartX, cwStartY, cwEndX, cwEndY);
-              }
-              break;
-            case 'west':
-              for (let i = 0; i < numOfCrossWalkLines; ++i) {
-                const dispX = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
-                const dispY = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
-                const cwStartX = x;
-                const cwStartY = (y + gapLength) + i * gapLength;
-                const cwEndX = cwStartX - Length + dispX;
-                const cwEndY = cwStartY + dispY;
-                line(cwStartX, cwStartY, cwEndX, cwEndY);
-              }
-              break;
-            case 'east':
-              for (let i = 0; i < numOfCrossWalkLines; ++i) {
-                const dispX = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
-                const dispY = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
-                const cwStartX = x + 2 * gridSize;
-                const cwStartY = y + gapLength + i * gapLength;
-                const cwEndX = cwStartX + Length + dispX;
-                const cwEndY = cwStartY + dispY;
-                line(cwStartX, cwStartY, cwEndX, cwEndY);
-              }
-              break;
-          }
+      const x = intersection.x - gridSize;
+      const y = intersection.y - gridSize;
+      const roadsInfo = countNumRoads(grid, intersection, gridSize, width, height);
+      const numRoads = roadsInfo.numRoads;
+      const directions = roadsInfo.roads;
+      if (numRoads > 0) {
+        strokeWeight(roadBorderSize);
+        stroke(0, 0, 0); // Set stroke color for borders
+        if (!directions.includes('north')) {
+          line(x, y, x + 2 * gridSize, y); // Draw border at the north
+        }
+        if (!directions.includes('south')) {
+          line(x, y + 2 * gridSize, x + 2 * gridSize, y + 2 * gridSize); // Draw border at the south
+        }
+        if (!directions.includes('west')) {
+          line(x, y, x, y + 2 * gridSize); // Draw border at the west
+        }
+        if (!directions.includes('east')) {
+          line(x + 2 * gridSize, y, x + 2 * gridSize, y + 2 * gridSize); // Draw border at the east
         }
         noStroke(); // Reset stroke
+
+        // Draw crosswalks
+        if (numRoads > 2) {
+          const numOfCrossWalkLines = 4; // For each half of the road
+          const gapLength = gridSize % 2 === 0 ? Math.floor(2 * gridSize / (numOfCrossWalkLines + 1)) : Math.ceil(2 * gridSize / (numOfCrossWalkLines + 1));
+          stroke(255, 255, 255);
+          strokeWeight(dashedLineWidth);
+          translate(0,0,1);
+          for (let dir of directions) {
+            switch (dir) {
+              case 'north':
+                for (let i = 0; i < numOfCrossWalkLines; ++i) {
+                  const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 2 * gridSize;
+                  const dispX = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
+                  const dispY = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
+                  const cwStartX = (x + gapLength) + i * gapLength;
+                  const cwStartY = y;
+                  const cwEndX = cwStartX + dispX;
+                  const cwEndY = cwStartY - Length + dispY;
+                  line(cwStartX, cwStartY, cwEndX, cwEndY);
+                }
+                break;
+              case 'south':
+                for (let i = 0; i < numOfCrossWalkLines; ++i) {
+                  const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 2 * gridSize;
+                  const dispX = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
+                  const dispY = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
+                  const cwStartX = (x + gapLength) + i * gapLength;
+                  const cwStartY = y + 2 * gridSize;
+                  const cwEndX = cwStartX + dispX;
+                  const cwEndY = cwStartY + Length + dispY;
+                  line(cwStartX, cwStartY, cwEndX, cwEndY);
+                }
+                break;
+              case 'west':
+                for (let i = 0; i < numOfCrossWalkLines; ++i) {
+                  const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 2 * gridSize;
+                  const dispX = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
+                  const dispY = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
+                  const cwStartX = x;
+                  const cwStartY = (y + gapLength) + i * gapLength;
+                  const cwEndX = cwStartX - Length + dispX;
+                  const cwEndY = cwStartY + dispY;
+                  line(cwStartX, cwStartY, cwEndX, cwEndY);
+                }
+                break;
+              case 'east':
+                for (let i = 0; i < numOfCrossWalkLines; ++i) {
+                  const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 2 * gridSize;
+                  const dispX = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
+                  const dispY = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
+                  const cwStartX = x + 2 * gridSize;
+                  const cwStartY = y + gapLength + i * gapLength;
+                  const cwEndX = cwStartX + Length + dispX;
+                  const cwEndY = cwStartY + dispY;
+                  line(cwStartX, cwStartY, cwEndX, cwEndY);
+                }
+                break;
+            }
+          }
+          noStroke(); // Reset stroke
         pop();
       }
       return true; // keep this intersection
