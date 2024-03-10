@@ -8,29 +8,30 @@ class Building{
    }
 
   check_quarter() {
-      /*
-      0: Top-left
-      1: Top-Right
-      2: Bottom-left
-      3: Bottom-right
-      */
-      let horizontal = (this.cx <= width / 2) ? 0 : 1;
-      let vertical = (this.cy <= height / 2) ? 0 : 1;
-      return 2 * vertical + horizontal;
-    }
+    /*
+    0: Top-left
+    1: Top-Right
+    2: Bottom-left
+    3: Bottom-right
+    */
+    let horizontal = (this.cx <= width / 2) ? 0 : 1;
+    let vertical = (this.cy <= height / 2) ? 0 : 1;
+    return 2 * vertical + horizontal;
+  }
   
-    draw_windows(){
-      for (const window of this.windows) {
-        window.draw_window();
-      }
+  draw_windows(){
+    push();
+    for (const window of this.windows) {
+      window.draw_window();
     }
+    pop();
+  }
 
-    calc_displacement(){
-      return Math.floor($fx.rand()* (this.max_displacement + this.max_displacement - 1)) + this.max_displacement;
-    }
+  calc_displacement(){
+    return Math.floor(($fx.rand() * (2 * this.max_displacement)) - this.max_displacement);
+  }
   
-    draw_edges(x=this.x_length, y=this.y_length, z=this.z_length) {
-
+  draw_edges(x, y, z) {
     const half_x = x / 2;
     const half_y = y / 2;
     const half_z = z / 2;
@@ -61,7 +62,6 @@ class Building{
         [points[3], points[7]]
     ];
     push();
-    translate(this.cx, this.cy, this.cz);
     stroke(0);
     strokeWeight(1);
     for (const edge of edgesToDraw) {

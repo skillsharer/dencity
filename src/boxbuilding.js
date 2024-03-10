@@ -5,9 +5,13 @@ class BoxBuilding extends Building{
     this.y_length = y;
     this.z_length = z;
     this.quarter = this.check_quarter();
-    this.windows = null;
+    this.windows = this.calculate_windows();
     this.top_frame = top_frame;
     this.frame_thickness = frame_thickness;
+    if (this.top_frame) {
+      this.z_length = this.z_length + this.frame_thickness;
+      this.cz = this.cz + this.frame_thickness/2;
+    }
   }
   
   // HELPER FUNCTIONS
@@ -16,9 +20,9 @@ calculate_windows() {
 
   // Calculate number of windows randomly for each axis
   const window_nums = {
-    x: Math.floor($fx.rand() * 10),
-    y: Math.floor($fx.rand() * 10),
-    z: Math.floor($fx.rand() * 20)
+    x: Math.floor($fx.rand() * 5),
+    y: Math.floor($fx.rand() * 5),
+    z: Math.floor($fx.rand() * 30)
   };
 
   // Calculate window segment sizes for each axis
@@ -98,63 +102,64 @@ calculate_windows() {
 
   
  draw_top_frame() {
-    // Frame thickness
-    const halfFrameThickness = this.frame_thickness/2;
-
-    // Set the color of the frame
+  push();
+    const halfFrameThickness = this.frame_thickness*0.5;
     fill(this.building_color);
     noStroke();
-    push();
-    translate(0,0,(this.z_length + this.frame_thickness)/2)
+    translate(0,0,this.z_length*0.5 - halfFrameThickness);
     this.draw_edges(this.x_length - 2.5*this.frame_thickness, this.y_length - 2.5*this.frame_thickness, this.frame_thickness);
-    pop();
     // Draw frame on the front and back edges parallel to the X-axis
     for (let y = -1; y <= 1; y += 2) {
       push();
-      translate(this.cx, this.cy + (y * this.y_length / 2) + (-y * halfFrameThickness), this.cz + this.z_length / 2 + halfFrameThickness);
-      rotateX(HALF_PI);
-      box(this.x_length, this.frame_thickness, this.frame_thickness);
-      translate(0, halfFrameThickness + 1, 0);
-      rotateY(HALF_PI);
-      rotateX(HALF_PI);
-      noStroke();
-      fill(color(200,200,200));
-      plane(this.frame_thickness, this.x_length);
+        translate(0, (y * this.y_length * 0.5) + (-y * halfFrameThickness), 0);
+        rotateX(HALF_PI);
+        box(this.x_length, this.frame_thickness, this.frame_thickness);
+        translate(0, halfFrameThickness*1.01, 0);
+        rotateY(HALF_PI);
+        rotateX(HALF_PI);
+        noStroke();
+        fill(color(200,200,200));
+        plane(this.frame_thickness, this.x_length);
       pop();
     }
 
     // Draw frame on the left and right edges parallel to the Y-axis
     for (let x = -1; x <= 1; x += 2) {
       push();
-      translate(this.cx + (x * this.x_length / 2) + (-x * halfFrameThickness), this.cy, this.cz + this.z_length / 2 + halfFrameThickness);
-      rotateZ(PI); // Rotate around Z-axis to align along the Y-axis
-      box(this.frame_thickness, this.y_length, this.frame_thickness);
-      translate(0, 0, halfFrameThickness + 1);
-      noStroke();
-      fill(color(200,200,200));
-      plane(this.frame_thickness, this.y_length);
+        translate((x * this.x_length * 0.5) + (-x * halfFrameThickness), 0, 0);
+        rotateZ(PI); // Rotate around Z-axis to align along the Y-axis
+        box(this.frame_thickness, this.y_length, this.frame_thickness);
+        translate(0, 0, halfFrameThickness*1.01);
+        noStroke();
+        fill(color(200,200,200));
+        plane(this.frame_thickness, this.y_length);
       pop();
     }
-   
-    this.z_length = this.z_length + this.frame_thickness;
-    this.cz = this.cz + this.frame_thickness/2;
+  pop();
  }
 
-  
-  draw_building(){
+  draw_base(){
     push();
-      push();
-      noStroke();
       translate(this.cx, this.cy, this.cz);
+      noStroke();
       fill(this.building_color);
-      box(this.x_length, this.y_length, this.z_length);
-      pop();
+      if (this.top_frame) {
+        translate(0, 0, -this.frame_thickness*0.5);
+        box(this.x_length, this.y_length, this.z_length - this.frame_thickness);
+        translate(0, 0, this.frame_thickness*0.5);
+      } else {
+        box(this.x_length, this.y_length, this.z_length);
+      }
+      this.draw_edges(this.x_length, this.y_length, this.z_length);
       if (this.top_frame) {
         this.draw_top_frame();
-        translate(0,0,this.frame_thickness/2);
       }
-      this.draw_edges();
-      this.windows = this.calculate_windows();
+    pop();
+  }
+
+  draw_building(){
+    push();
+      this.draw_base();
       this.draw_windows();
     pop();
   }

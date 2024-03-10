@@ -15,7 +15,7 @@ class Window{
   }
   
   randomDisplacement(){
-    return Math.floor($fx.rand() * (this.max_displacement + this.max_displacement + 1)) + this.max_displacement;
+    return Math.floor(($fx.rand() * (2 * this.max_displacement)) - this.max_displacement);
   }
   
   draw_rolls(){
@@ -106,7 +106,6 @@ class Window{
         make_edge(-HALF_PI);
         break;
     }
-    
     pop();
   }
 }

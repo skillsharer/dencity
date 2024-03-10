@@ -91,13 +91,14 @@ function generateRandomValues(baseType) {
     buildingShapeIndex = Math.floor($fx.rand() * 4);
   }
   let height = $fx.rand() * (maxBuildingHeight - minBuildingHeight + 1) + minBuildingHeight;
-  let top_frame = $fx.rand() < 0.5;
+  let top_frame = $fx.rand() > 0.5 ? true : false;
   let color = randomColor();
   let segment_ratios = $fx.rand() > 0.5 ? [1, 0.7] : [1, 0.7, 0.5];
-  return {buildingShapeIndex, height, top_frame, color, segment_ratios};
+  let segment_size = height * 0.01;
+  return {buildingShapeIndex, height, top_frame, color, segment_ratios, segment_size};
 }
 
-function placeBuilding(x, y, width, depth, baseType, grid, gridSize, buildings_array, buildingShapeIndex, height, top_frame, color, segment_ratios, maxDisplacement) {
+function placeBuilding(x, y, width, depth, baseType, grid, gridSize, buildings_array, buildingShapeIndex, height, top_frame, color, segment_ratios, segment_size, maxDisplacement) {
   let buildingShapes;
   if (baseType === 'rectangle') {
     buildingShapes = ['BoxBuilding', 'CrossBuilding', 'SetBackBuilding'];
@@ -110,13 +111,13 @@ function placeBuilding(x, y, width, depth, baseType, grid, gridSize, buildings_a
   // init the building
   let building;
   if (shape === 'BoxBuilding') {
-    building = new BoxBuilding((x + width / 2), (y + depth / 2), height/2, width, depth, height, color, maxDisplacement, top_frame, width*0.03);
+    building = new BoxBuilding((x + width / 2), (y + depth / 2), height/2, width, depth, height, color, maxDisplacement, top_frame, segment_size);
   }
   else if (shape === 'CrossBuilding') {
-    building = new CrossBuilding((x + width / 2), (y + depth / 2), height/2, width, depth, height, color, maxDisplacement, top_frame, width*0.09);
+    building = new CrossBuilding((x + width / 2), (y + depth / 2), height/2, width, depth, height, color, maxDisplacement, top_frame, segment_size);
   }
   else if (shape === 'SetBackBuilding') {
-    building = new SetBackBuilding((x + width / 2), (y + depth / 2), 0, width, depth, height, color, maxDisplacement, top_frame, width*0.03, segment_ratios);
+    building = new SetBackBuilding((x + width / 2), (y + depth / 2), 0, width, depth, height, color, maxDisplacement, top_frame, segment_size, segment_ratios);
   }
   else if (shape === 'CylinderBuilding') {
     building = new CylinderBuilding((x + width / 2), (y + depth / 2), height/2, width, depth, height, color, maxDisplacement, 20);
@@ -167,7 +168,7 @@ function defineBuildings(grid, minBuildingSize, maxBuildingSize, gridSize, maxDi
     }
     if (canPlaceBuilding(point.x, point.y, width, depth, grid, gridSize)) {
       let randomValues = generateRandomValues(baseType);
-      placeBuilding(point.x, point.y, width, depth, baseType, grid, gridSize, buildings_array, randomValues.buildingShapeIndex, randomValues.height, randomValues.top_frame, randomValues.color, randomValues.segment_ratios, maxDisplacement);   
+      placeBuilding(point.x, point.y, width, depth, baseType, grid, gridSize, buildings_array, randomValues.buildingShapeIndex, randomValues.height, randomValues.top_frame, randomValues.color, randomValues.segment_ratios, randomValues.segment_size, maxDisplacement);   
     }
   }
 
