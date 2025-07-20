@@ -253,7 +253,7 @@ function finalizeMap(grid, intersections, width, height, gridSize, maxDisplaceme
             switch (dir) {
               case 'north':
                 for (let i = 0; i < numOfCrossWalkLines; ++i) {
-                  const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 2 * gridSize;
+                  const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 1.7 * gridSize;
                   const dispX = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
                   const dispY = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
                   const cwStartX = (x + gapLength) + i * gapLength;
@@ -265,7 +265,7 @@ function finalizeMap(grid, intersections, width, height, gridSize, maxDisplaceme
                 break;
               case 'south':
                 for (let i = 0; i < numOfCrossWalkLines; ++i) {
-                  const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 2 * gridSize;
+                  const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 1.7 * gridSize;
                   const dispX = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
                   const dispY = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
                   const cwStartX = (x + gapLength) + i * gapLength;
@@ -277,7 +277,7 @@ function finalizeMap(grid, intersections, width, height, gridSize, maxDisplaceme
                 break;
               case 'west':
                 for (let i = 0; i < numOfCrossWalkLines; ++i) {
-                  const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 2 * gridSize;
+                  const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 1.7 * gridSize;
                   const dispX = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
                   const dispY = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
                   const cwStartX = x;
@@ -289,7 +289,7 @@ function finalizeMap(grid, intersections, width, height, gridSize, maxDisplaceme
                 break;
               case 'east':
                 for (let i = 0; i < numOfCrossWalkLines; ++i) {
-                  const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 2 * gridSize;
+                  const Length = (maxDisplacement != 0.0) ? Math.floor($fx.rand() * (2 * gridSize - 1.7 * gridSize + 1)) + 1.7 * gridSize : 1.7 * gridSize;
                   const dispX = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
                   const dispY = Math.floor($fx.rand() * (maxDisplacement + maxDisplacement + 1)) - maxDisplacement;
                   const cwStartX = x + 2 * gridSize;
@@ -345,7 +345,7 @@ function calculateOffset(start, end, adjustment) {
 }
 
 function drawDashedLinesBetweenIntersections(intersections) {
-    const adjustment = 3 * gridSize;
+    const adjustment = 4 * gridSize;
     for (let intersection of intersections) {
         for (let connection of intersection.connectedIntersections) {
             // Calculate start and end coordinates

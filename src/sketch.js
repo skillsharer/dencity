@@ -77,9 +77,9 @@ function draw() {
   defineBorders(grid, canvasWidth, canvasHeight, roadBorder);
   drawDashedLinesBetweenIntersections(intersections);
   buildings = defineBuildings(grid, minBuildingSize, maxBuildingSize, gridSize, maxDisplacement);
-  for (building of buildings) {
+  /*for (building of buildings) {
     building.draw_building();
-  }
+  }*/
   finalizeMap(grid, intersections, canvasWidth, canvasHeight, gridSize, maxDisplacement);
   if (debug) debugCellType(grid);
   1 === frameCount && $fx.preview();
