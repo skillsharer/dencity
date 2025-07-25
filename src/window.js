@@ -9,7 +9,6 @@ class Window{
     this.bg_color = bg_color;
     this.position = position;
     this.max_displacement = max_displacement;
-    //console.log(this.max_displacement);
     this.rolls = rolls;
     this.roll_color = roll_color;
   }

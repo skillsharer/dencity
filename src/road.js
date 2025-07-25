@@ -36,7 +36,7 @@ function populateIntersections(grid, intersections, width, height, gridSize, int
   for (let i = mapBorder; i < width; i+=intersectBorder){
     for (let j = mapBorder; j < height; j+=intersectBorder){
       if (j % gridSize === 0 && i % gridSize === 0){
-        if (random() < intersectionDensity) {
+        if ($fx.rand() < intersectionDensity) {
           let intersection = new Intersection(i, j);
           intersections.push(intersection);
           grid[i][j] = intersection; 
