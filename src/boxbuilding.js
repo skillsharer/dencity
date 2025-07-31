@@ -10,7 +10,7 @@ class BoxBuilding extends Building{
     this.frame_thickness = frame_thickness;
     if (this.top_frame) {
       this.z_length = this.z_length + this.frame_thickness;
-      this.cz = this.cz + this.frame_thickness/2;
+      this.cz = this.cz + this.frame_thickness * 0.5;
     }
   }
   
@@ -18,11 +18,15 @@ class BoxBuilding extends Building{
 calculate_windows() {
   let windows = [];
 
+  const WINDOW_WIDTH = gridSize * 1.5; 
+  const WINDOW_HEIGHT = gridSize * 1.5;
+  const MIN_SPACING = gridSize *1.0;
+
   // Calculate number of windows randomly for each axis
   const window_nums = {
-    x: Math.floor($fx.rand() * 5),
-    y: Math.floor($fx.rand() * 5),
-    z: Math.floor($fx.rand() * 30)
+    x: Math.floor($fx.rand() * (Math.floor(this.x_length / (WINDOW_WIDTH + MIN_SPACING)) - 1)) + 1,
+    y: Math.floor($fx.rand() * (Math.floor(this.y_length / (WINDOW_WIDTH + MIN_SPACING)) - 1)) + 1,
+    z: Math.floor($fx.rand() * (Math.floor(this.z_length / (WINDOW_HEIGHT + MIN_SPACING)) - 1)) + 1
   };
 
   // Calculate window segment sizes for each axis
@@ -48,7 +52,7 @@ calculate_windows() {
 
   // Define constants
   const d = 1;
-  const bg_color = 'rgb(138,138,146)'; // Changed to a proper RGB string
+  const bg_color = color(244,230,211);
 
   // Helper function to create windows for a given side
   const createWindowsForSide = (axis1, axis2, side, startCoords) => {
@@ -68,7 +72,8 @@ calculate_windows() {
           d,
           bg_color,
           side,
-          this.max_displacement
+          this.max_displacement,
+          this.building_color
         );
         windows.push(window);
       }
