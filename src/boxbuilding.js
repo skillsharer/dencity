@@ -4,104 +4,171 @@ class BoxBuilding extends Building{
     this.x_length = x;
     this.y_length = y;
     this.z_length = z;
-    this.quarter = this.check_quarter();
-    this.windows = this.calculate_windows();
+    this.window_type = $fx.rand() < 0.5 ? "normal" : "line";
     this.top_frame = top_frame;
     this.frame_thickness = frame_thickness;
     if (this.top_frame) {
       this.z_length = this.z_length + this.frame_thickness;
       this.cz = this.cz + this.frame_thickness * 0.5;
     }
+    if (this.window_type === "line") {
+      this.horizontal_lines = Math.floor($fx.rand() * 10) + 1;
+      this.vertical_lines = Math.floor($fx.rand() * 10) + 1;
+    }
+    this.quarter = this.check_quarter();
+    this.windows = this.calculate_windows();
   }
+
+// Quarter 0: Front + Right sides
+// Quarter 1: Front + Left sides
+// Quarter 2: Right + Back sides
+// Quarter 3: Left + Back sides
   
   // HELPER FUNCTIONS
 calculate_windows() {
   let windows = [];
-
-  const WINDOW_WIDTH = gridSize * 1.5; 
-  const WINDOW_HEIGHT = gridSize * 1.5;
-  const MIN_SPACING = gridSize *1.0;
-
-  // Calculate number of windows randomly for each axis
-  const window_nums = {
-    x: Math.floor($fx.rand() * (Math.floor(this.x_length / (WINDOW_WIDTH + MIN_SPACING)) - 1)) + 1,
-    y: Math.floor($fx.rand() * (Math.floor(this.y_length / (WINDOW_WIDTH + MIN_SPACING)) - 1)) + 1,
-    z: Math.floor($fx.rand() * (Math.floor(this.z_length / (WINDOW_HEIGHT + MIN_SPACING)) - 1)) + 1
-  };
-
-  // Calculate window segment sizes for each axis
-  const window_segments = {
-    x: this.x_length / window_nums.x,
-    y: this.y_length / window_nums.y,
-    z: this.z_length / window_nums.z
-  };
-
-  // Calculate window gaps for each axis
-  const window_gaps = {
-    x: window_segments.x * $fx.rand(),
-    y: window_segments.y * $fx.rand(),
-    z: window_segments.z * $fx.rand()
-  };
-
-  // Calculate window lengths for each axis
-  const window_lengths = {
-    x: window_segments.x - window_gaps.x,
-    y: window_segments.y - window_gaps.y,
-    z: window_segments.z - window_gaps.z
-  };
-
-  // Define constants
-  const d = 1;
-  const bg_color = color(244,230,211);
-
-  // Helper function to create windows for a given side
-  const createWindowsForSide = (axis1, axis2, side, startCoords) => {
-    for (let i = 0; i < window_nums[axis1]; i++) {
-      for (let j = 0; j < window_nums[axis2]; j++) {
-        const coords = {
-          x: startCoords.x + (axis1 === 'x' ? window_gaps.x / 2 + (i * window_segments.x) : 0),
-          y: startCoords.y - (axis1 === 'y' ? window_gaps.y / 2 + (i * window_segments.y) : 0),
-          z: startCoords.z + (axis2 === 'z' ? window_gaps.z / 2 + (j * window_segments.z) : 0)
-        };
-        const window = new Window(
-          coords.x,
-          coords.y,
-          coords.z,
-          window_lengths[axis1],
-          window_lengths[axis2],
-          d,
-          bg_color,
-          side,
-          this.max_displacement,
-          this.building_color
-        );
-        windows.push(window);
+  push();
+  stroke(0,0,0);
+  if (this.window_type === "line") {
+    let x_window_segment_length = this.x_length / this.horizontal_lines;
+    let y_window_segment_length = this.y_length / this.horizontal_lines;
+    let z_window_segment_length = this.z_length / this.vertical_lines;
+    if ([0, 1].includes(this.quarter)) {
+      // X front side vertical lines
+      for (let i = 1; i < this.horizontal_lines; ++i){
+        let current_pos = (this.cx - this.x_length * 0.5) + i * x_window_segment_length + this.calc_displacement();
+        line(current_pos, this.cy + this.y_length * 0.5 + this.calc_displacement(), this.cz - this.z_length * 0.5 - this.frame_thickness, current_pos, this.cy + this.y_length * 0.5 + this.calc_displacement(), this.cz + this.z_length * 0.5 - this.frame_thickness);
+      }
+      // X front side horizontal lines
+      for (let i = 1; i < this.vertical_lines; ++i){
+        let current_pos = (this.cz - this.z_length * 0.5) + i * z_window_segment_length + this.calc_displacement();
+        line(this.cx - this.x_length * 0.5 + this.calc_displacement(), this.cy + this.y_length * 0.5 + this.calc_displacement(), current_pos, this.cx + this.x_length * 0.5 + this.calc_displacement(), this.cy + this.y_length * 0.5 + this.calc_displacement(), current_pos);
       }
     }
-  };
+    if ([0, 2].includes(this.quarter)) {
+      // Y right side vertical lines
+      for (let i = 1; i < this.horizontal_lines; ++i){
+        let current_pos = (this.cy - this.y_length * 0.5) + i * y_window_segment_length + this.calc_displacement();
+        line(this.cx + this.x_length * 0.5 + this.calc_displacement(), current_pos, this.cz - this.z_length * 0.5 - this.frame_thickness, this.cx + this.x_length * 0.5 + this.calc_displacement(), current_pos, this.cz + this.z_length * 0.5 - this.frame_thickness);
+      }
+      // Y right side horizontal lines
+      for (let i = 1; i < this.vertical_lines; ++i){
+        let current_pos = (this.cz - this.z_length * 0.5) + i * z_window_segment_length + this.calc_displacement();
+        line(this.cx + this.x_length * 0.5 + this.calc_displacement(), this.cy - this.y_length * 0.5 + this.calc_displacement(), current_pos, this.cx + this.x_length * 0.5 + this.calc_displacement(), this.cy + this.y_length * 0.5 + this.calc_displacement(), current_pos); 
+      }
+    }
+    if ([1, 3].includes(this.quarter)) {
+      // Y left side vertical lines (already present above, but included for completeness)
+      for (let i = 1; i < this.horizontal_lines; ++i){
+        let current_pos = (this.cy - this.y_length * 0.5) + i * y_window_segment_length + this.calc_displacement();
+        line(this.cx - this.x_length * 0.5 + this.calc_displacement(), current_pos, this.cz - this.z_length * 0.5 - this.frame_thickness, this.cx - this.x_length * 0.5 + this.calc_displacement(), current_pos, this.cz + this.z_length * 0.5 - this.frame_thickness);
+      }
+      // Y left side horizontal lines (already present above, but included for completeness)
+      for (let i = 1; i < this.vertical_lines; ++i){
+        let current_pos = (this.cz - this.z_length * 0.5) + i * z_window_segment_length + this.calc_displacement();
+        line(this.cx - this.x_length * 0.5 + this.calc_displacement(), this.cy - this.y_length * 0.5 + this.calc_displacement(), current_pos, this.cx - this.x_length * 0.5 + this.calc_displacement(), this.cy + this.y_length * 0.5 + this.calc_displacement(), current_pos); 
+      }
+    }
+    if ([2, 3].includes(this.quarter)) {
+      // X back side vertical lines
+      for (let i = 1; i < this.horizontal_lines; ++i){
+        let current_pos = (this.cx - this.x_length * 0.5) + i * x_window_segment_length + this.calc_displacement();
+        line(current_pos, this.cy - this.y_length * 0.5 + this.calc_displacement(), this.cz - this.z_length * 0.5 - this.frame_thickness, current_pos, this.cy - this.y_length * 0.5 + this.calc_displacement(), this.cz + this.z_length * 0.5 - this.frame_thickness);
+      }
+      // X back side horizontal lines
+      for (let i = 1; i < this.vertical_lines; ++i){
+        let current_pos = (this.cz - this.z_length * 0.5) + i * z_window_segment_length + this.calc_displacement();
+        line(this.cx - this.x_length * 0.5 + this.calc_displacement(), this.cy - this.y_length * 0.5 + this.calc_displacement(), current_pos, this.cx + this.x_length * 0.5 + this.calc_displacement(), this.cy - this.y_length * 0.5 + this.calc_displacement(), current_pos);
+      }
+    }
+    pop();
+  
+  } else if (this.window_type === "normal") {
 
-  // Calculate start positions for each side
-  const startPositions = {
-    front: { x: this.cx - this.x_length / 2, y: this.cy + this.y_length / 2 + 1, z: this.cz - this.z_length / 2 },
-    right: { x: this.cx + this.x_length / 2 + 1, y: this.cy + this.y_length / 2, z: this.cz - this.z_length / 2 },
-    left: { x: this.cx - this.x_length / 2 - 1, y: this.cy + this.y_length / 2, z: this.cz - this.z_length / 2 },
-    back: { x: this.cx - this.x_length / 2, y: this.cy - this.y_length / 2 - 1, z: this.cz - this.z_length / 2 }
-  };
+    const WINDOW_WIDTH = gridSize * 1.5; 
+    const WINDOW_HEIGHT = gridSize * 1.5;
+    const MIN_SPACING = gridSize * 1.0;
 
-  // Create windows for each side based on the quarter property
-  if ([0, 1].includes(this.quarter)) {
-    createWindowsForSide('x', 'z', 'front', startPositions.front);
-  }
-  if ([0, 2].includes(this.quarter)) {
-    createWindowsForSide('y', 'z', 'right', startPositions.right);
-  }
-  if ([1, 3].includes(this.quarter)) {
-    createWindowsForSide('y', 'z', 'left', startPositions.left);
-  }
-  if ([2, 3].includes(this.quarter)) {
-    createWindowsForSide('x', 'z', 'back', startPositions.back);
-  }
+    // Calculate number of windows randomly for each axis
+    const window_nums = {
+      x: Math.floor($fx.rand() * (Math.floor(this.x_length / (WINDOW_WIDTH + MIN_SPACING)) - 1)) + 1,
+      y: Math.floor($fx.rand() * (Math.floor(this.y_length / (WINDOW_WIDTH + MIN_SPACING)) - 1)) + 1,
+      z: Math.floor($fx.rand() * (Math.floor(this.z_length / (WINDOW_HEIGHT + MIN_SPACING)) - 1)) + 1
+    };
 
+    // Calculate window segment sizes for each axis
+    const window_segments = {
+      x: this.x_length / window_nums.x,
+      y: this.y_length / window_nums.y,
+      z: this.z_length / window_nums.z
+    };
+
+    // Calculate window gaps for each axis
+    const window_gaps = {
+      x: window_segments.x * $fx.rand(),
+      y: window_segments.y * $fx.rand(),
+      z: window_segments.z * $fx.rand()
+    };
+
+    // Calculate window lengths for each axis
+    const window_lengths = {
+      x: window_segments.x - window_gaps.x,
+      y: window_segments.y - window_gaps.y,
+      z: window_segments.z - window_gaps.z
+    };
+
+    // Define constants
+    const d = 1;
+    const bg_color = color(244,230,211);
+
+    // Helper function to create windows for a given side
+    const createWindowsForSide = (axis1, axis2, side, startCoords) => {
+      for (let i = 0; i < window_nums[axis1]; i++) {
+        for (let j = 0; j < window_nums[axis2]; j++) {
+          const coords = {
+            x: startCoords.x + (axis1 === 'x' ? window_gaps.x / 2 + (i * window_segments.x) : 0),
+            y: startCoords.y - (axis1 === 'y' ? window_gaps.y / 2 + (i * window_segments.y) : 0),
+            z: startCoords.z + (axis2 === 'z' ? window_gaps.z / 2 + (j * window_segments.z) : 0)
+          };
+          const window = new Window(
+            coords.x,
+            coords.y,
+            coords.z,
+            window_lengths[axis1],
+            window_lengths[axis2],
+            d,
+            bg_color,
+            side,
+            this.max_displacement,
+            this.building_color
+          );
+          windows.push(window);
+        }
+      }
+    };
+
+    // Calculate start positions for each side
+    const startPositions = {
+      front: { x: this.cx - this.x_length / 2, y: this.cy + this.y_length / 2 + 1, z: this.cz - this.z_length / 2 },
+      right: { x: this.cx + this.x_length / 2 + 1, y: this.cy + this.y_length / 2, z: this.cz - this.z_length / 2 },
+      left: { x: this.cx - this.x_length / 2 - 1, y: this.cy + this.y_length / 2, z: this.cz - this.z_length / 2 },
+      back: { x: this.cx - this.x_length / 2, y: this.cy - this.y_length / 2 - 1, z: this.cz - this.z_length / 2 }
+    };
+
+    // Create windows for each side based on the quarter property
+    if ([0, 1].includes(this.quarter)) {
+      createWindowsForSide('x', 'z', 'front', startPositions.front);
+    }
+    if ([0, 2].includes(this.quarter)) {
+      createWindowsForSide('y', 'z', 'right', startPositions.right);
+    }
+    if ([1, 3].includes(this.quarter)) {
+      createWindowsForSide('y', 'z', 'left', startPositions.left);
+    }
+    if ([2, 3].includes(this.quarter)) {
+      createWindowsForSide('x', 'z', 'back', startPositions.back);
+    }
+  }
   return windows;
 }
 
