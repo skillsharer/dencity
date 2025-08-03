@@ -58,12 +58,12 @@ calculate_windows() {
       }
     }
     if ([1, 3].includes(this.quarter)) {
-      // Y left side vertical lines (already present above, but included for completeness)
+      // Y left side vertical lines
       for (let i = 1; i < this.horizontal_lines; ++i){
         let current_pos = (this.cy - this.y_length * 0.5) + i * y_window_segment_length + this.calc_displacement();
         line(this.cx - this.x_length * 0.5 + this.calc_displacement(), current_pos, this.cz - this.z_length * 0.5 - this.frame_thickness, this.cx - this.x_length * 0.5 + this.calc_displacement(), current_pos, this.cz + this.z_length * 0.5 - this.frame_thickness);
       }
-      // Y left side horizontal lines (already present above, but included for completeness)
+      // Y left side horizontal lines
       for (let i = 1; i < this.vertical_lines; ++i){
         let current_pos = (this.cz - this.z_length * 0.5) + i * z_window_segment_length + this.calc_displacement();
         line(this.cx - this.x_length * 0.5 + this.calc_displacement(), this.cy - this.y_length * 0.5 + this.calc_displacement(), current_pos, this.cx - this.x_length * 0.5 + this.calc_displacement(), this.cy + this.y_length * 0.5 + this.calc_displacement(), current_pos); 
