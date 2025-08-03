@@ -5,6 +5,7 @@ class BoxBuilding extends Building{
     this.y_length = y;
     this.z_length = z;
     this.window_type = $fx.rand() < 0.5 ? "normal" : "line";
+    this.top_element = $fx.rand() < 0.5 ? true : false;
     this.top_frame = top_frame;
     this.frame_thickness = frame_thickness;
     if (this.top_frame) {
@@ -226,6 +227,9 @@ calculate_windows() {
       if (this.top_frame) {
         this.draw_top_frame();
       }
+      if (this.top_element){
+        this.draw_rooftop_element();
+      }
     pop();
   }
 
@@ -234,5 +238,22 @@ calculate_windows() {
       this.draw_base();
       this.draw_windows();
     pop();
+  }
+  
+  draw_rooftop_element(){
+    push();
+    stroke(0,0,0)
+    translate(0,0, this.cz + 2*this.frame_thickness);
+    let min_size = Math.floor(Math.min(this.x_length, this.y_length) / 5);
+    if ($fx.rand() < 0.5){
+      if ($fx.rand() < 0.5){
+        rotate(1);
+      }
+      box(min_size,min_size,min_size);
+    } else {
+      rotateX(1.5);
+      cylinder(min_size, min_size);
+    }
+    pop(); 
   }
 }

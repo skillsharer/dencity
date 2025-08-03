@@ -69,4 +69,8 @@ class Building{
     }
     pop();
   }
+
+  draw_rooftop_element(){
+    throw new Error("draw_rooftop_element() must be implemented by subclass");
+  }
 }

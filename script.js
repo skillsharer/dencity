@@ -23,6 +23,26 @@ $fx.params([
         max: 1.0,
         step: 0.1
     }
+  },
+  {
+    id: "intersection_density",
+    name: "Intersection Density",
+    type: "number",
+    default: 0.5,
+    options: {
+      min: 0.3,
+      max: 0.7,
+      step: 0.1
+    }
+  },
+  {
+    id: "palette",
+    name: "Color Palette",
+    type: "select",
+    default: "pear",
+    options: {
+      options: Array.from({length: 76}, (_, i) => (i + 1).toString()),
+    },
   }
 ]);
 
@@ -33,11 +53,12 @@ const gridSize = 5;
 const intersectBorder = gridSize*20;
 const mapBorder = gridSize*2;
 const roadBorder = gridSize;
-const intersectionDensity = 0.5;
-const minBuildingSize = gridSize*10;
+const intersectionDensity = $fx.getRawParam("intersection_density")
+const palette = $fx.getRawParam("palette")
+const minBuildingSize = gridSize*5;
 const maxBuildingSize = minBuildingSize*2;
 const minBuildingHeight = gridSize*30;
-const maxBuildingHeight = minBuildingHeight*2.5;
+const maxBuildingHeight = minBuildingHeight*2.0;
 const debug = false;
 const buildingFrameHeight = 7;
 const buildingFrameInset = 2;
@@ -84,7 +105,7 @@ function draw() {
   defineRoads(grid, intersections, canvasWidth, canvasHeight, gridSize, debug);
   defineBorders(grid, canvasWidth, canvasHeight, roadBorder);
   drawDashedLinesBetweenIntersections(intersections);
-  buildings = defineBuildings(grid, minBuildingSize, maxBuildingSize, gridSize, maxDisplacement);
+  buildings = defineBuildings(grid, minBuildingSize, maxBuildingSize, gridSize, palette, maxDisplacement);
   for (building of buildings) {
     building.draw_building();
   }
