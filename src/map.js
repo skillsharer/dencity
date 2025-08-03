@@ -83,7 +83,7 @@ function canPlaceBuilding(x, y, width, depth, grid, gridSize) {
   return true;
 }
 
-function generateRandomValues(baseType) {
+function generateRandomValues(baseType, palette) {
   let buildingShapeIndex;
   if (baseType === 'rectangle') {
     buildingShapeIndex = Math.floor($fx.rand() * 3);
@@ -92,7 +92,7 @@ function generateRandomValues(baseType) {
   }
   let height = $fx.rand() * (maxBuildingHeight - minBuildingHeight + 1) + minBuildingHeight;
   let top_frame = $fx.rand() > 0.5 ? true : false;
-  let color = randomColor();
+  let color = randomColor(palette);
   let segment_ratios = $fx.rand() > 0.5 ? [1, 0.7] : [1, 0.7, 0.5];
   let segment_size = height * 0.01;
   return {buildingShapeIndex, height, top_frame, color, segment_ratios, segment_size};
@@ -137,7 +137,7 @@ function placeBuilding(x, y, width, depth, baseType, grid, gridSize, buildings_a
   return buildings_array;
 }
 
-function defineBuildings(grid, minBuildingSize, maxBuildingSize, gridSize, maxDisplacement) {
+function defineBuildings(grid, minBuildingSize, maxBuildingSize, gridSize, palette, maxDisplacement) {
   let buildings_array = [];
   let points = [];
 
@@ -167,7 +167,7 @@ function defineBuildings(grid, minBuildingSize, maxBuildingSize, gridSize, maxDi
       width = depth = Math.floor(($fx.rand() * (maxBuildingSize - minBuildingSize + 1) + minBuildingSize) / gridSize) * gridSize;
     }
     if (canPlaceBuilding(point.x, point.y, width, depth, grid, gridSize)) {
-      let randomValues = generateRandomValues(baseType);
+      let randomValues = generateRandomValues(baseType, palette);
       placeBuilding(point.x, point.y, width, depth, baseType, grid, gridSize, buildings_array, randomValues.buildingShapeIndex, randomValues.height, randomValues.top_frame, randomValues.color, randomValues.segment_ratios, randomValues.segment_size, maxDisplacement);   
     }
   }
